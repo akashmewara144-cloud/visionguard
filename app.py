@@ -1017,7 +1017,183 @@ def receive_frame():
             "error": str(e)
         }), 500
 
+@app.route("/api/frame", methods=["POST"])
+def receive_frame():
+    global latest_jpeg, camera_running
 
+    try:
+        data = request.get_json(silent=True) or {}
+        image_data = data.get("image")
+
+        if not image_data:
+            return jsonify({
+                "success": False,
+                "error": "No image received"
+            }), 400
+
+        if "," in image_data:
+            image_data = image_data.split(",", 1)[1]
+
+        image_bytes = base64.b64decode(image_data)
+        frame_array = np.frombuffer(image_bytes, dtype=np.uint8)
+        frame = cv2.imdecode(frame_array, cv2.IMREAD_COLOR)
+
+        if frame is None:
+            return jsonify({
+                "success": False,
+                "error": "Could not decode image"
+            }), 400
+
+        camera_running = True
+
+        people = 0
+        objects = 0
+        start = time.time()
+
+        if model is not None:
+            try:
+                results = model.track(
+                    frame,
+                    persist=True,
+                    tracker="bytetrack.yaml",
+                    conf=CONFIDENCE,
+                    verbose=False,
+                    imgsz=640,
+                    device="cpu"
+                )
+
+                if results:
+                    boxes = results[0].boxes
+
+                    if boxes is not None:
+                        for i in range(len(boxes)):
+                            confidence = float(boxes.conf[i].item())
+
+                            if confidence < CONFIDENCE:
+                                continue
+
+                            cls = int(boxes.cls[i].item())
+
+                            x1, y1, x2, y2 = map(
+                                int,
+                                boxes.xyxy[i].cpu().numpy()
+                            )
+
+                            objects += 1
+
+                            track_id = -1
+
+                            if boxes.id is not None:
+                                try:
+                                    track_id = int(boxes.id[i].item())
+                                except:
+                                    track_id = -1
+
+                            if isinstance(model.names, dict):
+                                label = model.names.get(
+                                    cls,
+                                    str(cls)
+                                )
+                            else:
+                                label = model.names[cls]
+
+                            zone = "MONITORING"
+                            loitering = False
+                            abnormal = False
+
+                            if label == "person":
+                                people += 1
+
+                                if track_id >= 0:
+                                    process_person(
+                                        track_id,
+                                        confidence,
+                                        x1,
+                                        y1,
+                                        x2,
+                                        y2,
+                                        frame
+                                    )
+
+                                    track = tracks.get(
+                                        track_id,
+                                        {}
+                                    )
+
+                                    zone = track.get(
+                                        "zone",
+                                        "MONITORING"
+                                    )
+
+                                    loitering = track.get(
+                                        "loitering",
+                                        False
+                                    )
+
+                                    abnormal = track.get(
+                                        "abnormal",
+                                        False
+                                    )
+
+                            draw_detection(
+                                frame,
+                                x1,
+                                y1,
+                                x2,
+                                y2,
+                                label,
+                                confidence,
+                                track_id,
+                                zone,
+                                loitering,
+                                abnormal
+                            )
+
+            except Exception as e:
+                print("YOLO error:", e)
+
+        cleanup_tracks()
+
+        score, level, reasons = calculate_risk(people)
+
+        inference = (time.time() - start) * 1000
+
+        with state_lock:
+            state["people"] = people
+            state["objects"] = objects
+            state["inferenceTime"] = inference
+            state["risk"] = score
+            state["riskLevel"] = level
+            state["riskReasons"] = reasons
+            state["camera"] = True
+            state["yolo"] = model is not None
+
+        draw_overlay(frame)
+
+        ok, encoded = cv2.imencode(
+            ".jpg",
+            frame,
+            [cv2.IMWRITE_JPEG_QUALITY, 80]
+        )
+
+        if ok:
+            with frame_lock:
+                latest_jpeg = encoded.tobytes()
+
+        return jsonify({
+            "success": True,
+            "people": people,
+            "objects": objects,
+            "inferenceTime": inference
+        })
+
+    except Exception as e:
+        print("FRAME ERROR:", e)
+
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
 @app.route("/api/health")
 def health():
 
