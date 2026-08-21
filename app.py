@@ -1,9 +1,23 @@
 import os
+
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+
 import cv2
 import time
-import threading
 import base64
+import threading
 import numpy as np
+import torch
+
+torch.set_num_threads(1)
+try:
+    torch.set_num_interop_threads(1)
+except Exception:
+    pass
+
 from datetime import datetime
 from flask import Flask, Response, jsonify, request, send_from_directory
 from flask_cors import CORS
@@ -14,19 +28,24 @@ MODEL_PATH = os.path.join(BASE_DIR, "yolov8n.pt")
 EVIDENCE_DIR = os.path.join(BASE_DIR, "evidence")
 
 PORT = int(os.environ.get("PORT", 5000))
+
 CONFIDENCE = 0.45
+INFERENCE_INTERVAL = 0.35
+MODEL_SIZE = 320
+MAX_DETECTIONS = 10
+CAMERA_TIMEOUT = 5
+
 LOITERING_SECONDS = 10
 ABNORMAL_SPEED = 450
 CROWD_THRESHOLD = 4
 INCIDENT_COOLDOWN = 8
 TRACK_TIMEOUT = 3
-CAMERA_TIMEOUT = 5
 
 ENTRY_END = 0.25
 RESTRICTED_START = 0.65
 
 app = Flask(__name__, static_folder=BASE_DIR)
-app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024
+app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024
 CORS(app)
 
 os.makedirs(EVIDENCE_DIR, exist_ok=True)
@@ -34,6 +53,7 @@ os.makedirs(EVIDENCE_DIR, exist_ok=True)
 model = None
 latest_jpeg = None
 last_frame_time = 0
+last_inference_time = 0
 
 frame_lock = threading.Lock()
 state_lock = threading.Lock()
@@ -57,26 +77,32 @@ tracks = {}
 cooldowns = {}
 incidents = []
 incident_id = 1
+next_track_id = 1
 
 try:
     model = YOLO(MODEL_PATH)
+    model.fuse()
     state["yolo"] = True
-    print("YOLOv8 loaded successfully")
+    print("YOLOv8n loaded successfully")
 except Exception as e:
     print("YOLO loading failed:", e)
+    model = None
 
 
 def get_regions(frame):
     h, w = frame.shape[:2]
-    entry_x = int(w * ENTRY_END)
-    restricted_x = int(w * RESTRICTED_START)
-    return entry_x, restricted_x, w, h
+    return (
+        int(w * ENTRY_END),
+        int(w * RESTRICTED_START),
+        w,
+        h
+    )
 
 
-def get_person_zone(x1, y1, x2, y2, frame):
+def get_person_zone(x1, x2, frame):
     _, _, w, _ = get_regions(frame)
     center_x = (x1 + x2) / 2
-    ratio = center_x / w
+    ratio = center_x / max(w, 1)
 
     if ratio < ENTRY_END:
         return "ENTRY"
@@ -107,6 +133,7 @@ def create_incident(
     cooldowns[key] = now
 
     stamp = datetime.now()
+
     safe_type = "".join(
         c if c.isalnum() else "_"
         for c in event_type
@@ -119,16 +146,26 @@ def create_incident(
         f"{track_id}.jpg"
     )
 
-    path = os.path.join(
-        EVIDENCE_DIR,
-        filename
-    )
+    path = os.path.join(EVIDENCE_DIR, filename)
 
     evidence = None
 
     try:
-        if cv2.imwrite(path, frame):
+        small = cv2.resize(
+            frame,
+            (320, 240),
+            interpolation=cv2.INTER_AREA
+        )
+
+        if cv2.imwrite(
+            path,
+            small,
+            [cv2.IMWRITE_JPEG_QUALITY, 65]
+        ):
             evidence = f"/evidence/{filename}"
+
+        del small
+
     except Exception as e:
         print("Evidence error:", e)
 
@@ -136,28 +173,20 @@ def create_incident(
         "id": incident_id,
         "type": event_type,
         "trackingId": int(track_id),
-        "confidence": round(
-            float(confidence) * 100,
-            1
-        ),
+        "confidence": round(float(confidence) * 100, 1),
         "risk": score,
         "severity": severity,
         "reason": reason,
         "camera": "Browser Webcam",
-        "timestamp": stamp.strftime(
-            "%Y-%m-%d %H:%M:%S"
-        ),
+        "timestamp": stamp.strftime("%Y-%m-%d %H:%M:%S"),
         "evidence": evidence
     }
 
     with state_lock:
-        incidents.insert(
-            0,
-            incident
-        )
+        incidents.insert(0, incident)
 
-        if len(incidents) > 100:
-            incidents.pop()
+        if len(incidents) > 30:
+            del incidents[30:]
 
     print(
         f"INCIDENT | {event_type} | "
@@ -167,6 +196,29 @@ def create_incident(
     incident_id += 1
 
     return True
+
+
+def find_person_track(cx, cy):
+    global next_track_id
+
+    best_id = None
+    best_distance = 999999
+
+    for track_id, track in tracks.items():
+        distance = (
+            (cx - track["previous_x"]) ** 2 +
+            (cy - track["previous_y"]) ** 2
+        ) ** 0.5
+
+        if distance < 80 and distance < best_distance:
+            best_distance = distance
+            best_id = track_id
+
+    if best_id is None:
+        best_id = next_track_id
+        next_track_id += 1
+
+    return best_id
 
 
 def process_person(
@@ -182,32 +234,21 @@ def process_person(
 
     zone = get_person_zone(
         x1,
-        y1,
         x2,
-        y2,
         frame
     )
 
-    center_x = int(
-        (x1 + x2) / 2
-    )
-
-    center_y = int(
-        (y1 + y2) / 2
-    )
+    center_x = int((x1 + x2) / 2)
+    center_y = int((y1 + y2) / 2)
 
     if track_id not in tracks:
-
         tracks[track_id] = {
             "zone": zone,
             "previous_zone": zone,
             "previous_x": center_x,
             "previous_y": center_y,
             "previous_time": now,
-            "zone_start":
-                now
-                if zone == "RESTRICTED"
-                else None,
+            "zone_start": now if zone == "RESTRICTED" else None,
             "loitering": False,
             "abnormal": False,
             "last_seen": now
@@ -233,29 +274,18 @@ def process_person(
     previous_y = track["previous_y"]
     previous_time = track["previous_time"]
 
-    dt = max(
-        now - previous_time,
-        0.01
-    )
+    dt = max(now - previous_time, 0.05)
 
     distance = (
-        (
-            center_x - previous_x
-        ) ** 2
-        +
-        (
-            center_y - previous_y
-        ) ** 2
+        (center_x - previous_x) ** 2 +
+        (center_y - previous_y) ** 2
     ) ** 0.5
 
     speed = distance / dt
 
-    abnormal = (
-        speed >= ABNORMAL_SPEED
-    )
+    abnormal = speed >= ABNORMAL_SPEED
 
     if abnormal and not track["abnormal"]:
-
         create_incident(
             "Abnormal Movement",
             track_id,
@@ -268,11 +298,7 @@ def process_person(
 
     track["abnormal"] = abnormal
 
-    if (
-        previous_zone == "ENTRY"
-        and zone == "MONITORING"
-    ):
-
+    if previous_zone == "ENTRY" and zone == "MONITORING":
         with state_lock:
             state["entered"] += 1
 
@@ -286,11 +312,7 @@ def process_person(
             "Person moved from entry area into monitoring area"
         )
 
-    if (
-        previous_zone == "MONITORING"
-        and zone == "ENTRY"
-    ):
-
+    if previous_zone == "MONITORING" and zone == "ENTRY":
         with state_lock:
             state["exited"] += 1
 
@@ -301,14 +323,10 @@ def process_person(
             frame,
             20,
             "LOW",
-            "Person returned from monitoring area to entry area"
+            "Person returned to entry area"
         )
 
-    if (
-        zone == "RESTRICTED"
-        and previous_zone != "RESTRICTED"
-    ):
-
+    if zone == "RESTRICTED" and previous_zone != "RESTRICTED":
         track["zone_start"] = now
         track["loitering"] = False
 
@@ -323,24 +341,19 @@ def process_person(
         )
 
     if zone != "RESTRICTED":
-
         track["zone_start"] = None
         track["loitering"] = False
 
     if zone == "RESTRICTED":
-
         if track["zone_start"] is None:
             track["zone_start"] = now
 
-        duration = (
-            now - track["zone_start"]
-        )
+        duration = now - track["zone_start"]
 
         if (
             duration >= LOITERING_SECONDS
             and not track["loitering"]
         ):
-
             track["loitering"] = True
 
             create_incident(
@@ -366,22 +379,15 @@ def cleanup_tracks():
 
     expired = [
         track_id
-        for track_id, track in list(
-            tracks.items()
-        )
+        for track_id, track in tracks.items()
         if now - track["last_seen"] > TRACK_TIMEOUT
     ]
 
     for track_id in expired:
-        tracks.pop(
-            track_id,
-            None
-        )
+        tracks.pop(track_id, None)
 
 
-def calculate_risk(
-    people_count
-):
+def calculate_risk(people_count):
     restricted = any(
         t.get("zone") == "RESTRICTED"
         for t in tracks.values()
@@ -401,199 +407,31 @@ def calculate_risk(
     reasons = []
 
     if restricted:
-        score = max(
-            score,
-            70
-        )
-
-        reasons.append(
-            "Restricted zone intrusion"
-        )
+        score = max(score, 70)
+        reasons.append("Restricted zone intrusion")
 
     if loitering:
-        score = max(
-            score,
-            90
-        )
-
-        reasons.append(
-            "Loitering detected"
-        )
+        score = max(score, 90)
+        reasons.append("Loitering detected")
 
     if abnormal:
-        score = max(
-            score,
-            75
-        )
-
-        reasons.append(
-            "Abnormal movement detected"
-        )
+        score = max(score, 75)
+        reasons.append("Abnormal movement detected")
 
     if people_count >= CROWD_THRESHOLD:
-
-        score = max(
-            score,
-            65
-        )
-
-        reasons.append(
-            "Crowd detected"
-        )
+        score = max(score, 65)
+        reasons.append("Crowd detected")
 
     if score >= 81:
         level = "CRITICAL"
-
     elif score >= 61:
         level = "HIGH"
-
     elif score >= 31:
         level = "MEDIUM"
-
     else:
         level = "LOW"
 
     return score, level, reasons
-
-
-def draw_overlay(frame):
-    h, w = frame.shape[:2]
-
-    entry_x, restricted_x, _, _ = (
-        get_regions(frame)
-    )
-
-    cv2.line(
-        frame,
-        (entry_x, 0),
-        (entry_x, h),
-        (0, 220, 255),
-        2
-    )
-
-    cv2.line(
-        frame,
-        (restricted_x, 0),
-        (restricted_x, h),
-        (0, 140, 255),
-        2
-    )
-
-    cv2.rectangle(
-        frame,
-        (restricted_x, 0),
-        (w, h),
-        (0, 140, 255),
-        2
-    )
-
-    cv2.putText(
-        frame,
-        "ENTRY / ACCESS",
-        (15, 35),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.65,
-        (0, 220, 255),
-        2
-    )
-
-    cv2.putText(
-        frame,
-        "MONITORING AREA",
-        (entry_x + 15, 35),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.65,
-        (255, 255, 255),
-        2
-    )
-
-    cv2.putText(
-        frame,
-        "RESTRICTED ZONE",
-        (restricted_x + 15, 35),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.65,
-        (0, 140, 255),
-        2
-    )
-
-    with state_lock:
-
-        risk = state["risk"]
-        risk_level = state["riskLevel"]
-        people = state["people"]
-        objects = state["objects"]
-        entered = state["entered"]
-        exited = state["exited"]
-        fps = state["fps"]
-
-    if risk_level == "LOW":
-        color = (50, 200, 80)
-
-    elif risk_level == "MEDIUM":
-        color = (0, 220, 255)
-
-    elif risk_level == "HIGH":
-        color = (0, 140, 255)
-
-    else:
-        color = (0, 0, 255)
-
-    cv2.rectangle(
-        frame,
-        (w - 270, 10),
-        (w - 10, 50),
-        color,
-        -1
-    )
-
-    cv2.putText(
-        frame,
-        f"RISK {risk} - {risk_level}",
-        (w - 255, 38),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.62,
-        (255, 255, 255),
-        2
-    )
-
-    cv2.putText(
-        frame,
-        datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S"
-        ),
-        (15, 70),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.5,
-        (255, 255, 255),
-        1
-    )
-
-    status_text = (
-        f"People: {people} | "
-        f"Objects: {objects} | "
-        f"Entered: {entered} | "
-        f"Exited: {exited} | "
-        f"FPS: {fps:.1f}"
-    )
-
-    cv2.rectangle(
-        frame,
-        (10, h - 48),
-        (w - 10, h - 10),
-        (15, 23, 42),
-        -1
-    )
-
-    cv2.putText(
-        frame,
-        status_text,
-        (20, h - 23),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.5,
-        (255, 255, 255),
-        1
-    )
 
 
 def draw_detection(
@@ -610,22 +448,16 @@ def draw_detection(
     abnormal
 ):
     if label == "person":
-
         if abnormal:
             color = (0, 0, 255)
-
         elif loitering:
             color = (0, 140, 255)
-
         elif zone == "RESTRICTED":
             color = (0, 140, 255)
-
         elif zone == "ENTRY":
             color = (0, 220, 255)
-
         else:
             color = (80, 220, 100)
-
     else:
         color = (100, 180, 255)
 
@@ -637,10 +469,7 @@ def draw_detection(
         2
     )
 
-    text = (
-        f"{label} "
-        f"{confidence:.0%}"
-    )
+    text = f"{label} {confidence:.0%}"
 
     if track_id >= 0:
         text += f" ID:{track_id}"
@@ -654,153 +483,221 @@ def draw_detection(
     if abnormal:
         text += " ABNORMAL"
 
-    y_text = max(
-        20,
-        y1 - 8
+    cv2.putText(
+        frame,
+        text,
+        (x1, max(18, y1 - 6)),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.42,
+        color,
+        1
+    )
+
+
+def draw_overlay(frame):
+    h, w = frame.shape[:2]
+
+    entry_x, restricted_x, _, _ = get_regions(frame)
+
+    cv2.line(
+        frame,
+        (entry_x, 0),
+        (entry_x, h),
+        (0, 220, 255),
+        1
+    )
+
+    cv2.line(
+        frame,
+        (restricted_x, 0),
+        (restricted_x, h),
+        (0, 140, 255),
+        1
+    )
+
+    with state_lock:
+        risk = state["risk"]
+        risk_level = state["riskLevel"]
+        people = state["people"]
+        objects = state["objects"]
+        fps = state["fps"]
+
+    if risk_level == "LOW":
+        color = (50, 200, 80)
+    elif risk_level == "MEDIUM":
+        color = (0, 220, 255)
+    elif risk_level == "HIGH":
+        color = (0, 140, 255)
+    else:
+        color = (0, 0, 255)
+
+    cv2.rectangle(
+        frame,
+        (w - 190, 5),
+        (w - 5, 35),
+        color,
+        -1
+    )
+
+    cv2.putText(
+        frame,
+        f"RISK {risk} - {risk_level}",
+        (w - 180, 26),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.45,
+        (255, 255, 255),
+        1
+    )
+
+    text = (
+        f"People:{people} "
+        f"Objects:{objects} "
+        f"FPS:{fps:.1f}"
     )
 
     cv2.putText(
         frame,
         text,
-        (x1, y_text),
+        (8, h - 10),
         cv2.FONT_HERSHEY_SIMPLEX,
-        0.45,
-        color,
-        2
+        0.42,
+        (255, 255, 255),
+        1
     )
 
 
 def process_frame(frame):
     global latest_jpeg
     global last_frame_time
+    global last_inference_time
 
     with processing_lock:
+        now = time.time()
 
-        start = time.time()
+        last_frame_time = now
+
+        if (
+            now - last_inference_time
+            < INFERENCE_INTERVAL
+        ):
+            return
+
+        last_inference_time = now
+
+        height, width = frame.shape[:2]
+
+        target_width = 640
+
+        if width > target_width:
+            scale = target_width / width
+            frame = cv2.resize(
+                frame,
+                (
+                    target_width,
+                    int(height * scale)
+                ),
+                interpolation=cv2.INTER_AREA
+            )
+
+        display_frame = frame.copy()
 
         people = 0
         objects = 0
 
+        start = time.time()
+
         if model is not None:
-
             try:
-
-                results = model.track(
-                    frame,
-                    persist=True,
-                    tracker="bytetrack.yaml",
+                results = model.predict(
+                    source=frame,
                     conf=CONFIDENCE,
-                    verbose=False,
-                    imgsz=640,
-                    device="cpu"
+                    imgsz=MODEL_SIZE,
+                    max_det=MAX_DETECTIONS,
+                    device="cpu",
+                    verbose=False
                 )
 
                 if results:
-
                     boxes = results[0].boxes
 
                     if boxes is not None:
-
-                        for i in range(
-                            len(boxes)
-                        ):
-
+                        for i in range(len(boxes)):
                             confidence = float(
-                                boxes.conf[i].item()
+                                boxes.conf[i]
                             )
 
-                            if (
-                                confidence <
-                                CONFIDENCE
-                            ):
-                                continue
-
                             cls = int(
-                                boxes.cls[i].item()
+                                boxes.cls[i]
                             )
 
                             x1, y1, x2, y2 = map(
                                 int,
-                                boxes.xyxy[i]
-                                .cpu()
-                                .numpy()
+                                boxes.xyxy[i].tolist()
                             )
 
                             objects += 1
 
-                            track_id = -1
-
-                            if boxes.id is not None:
-
-                                try:
-
-                                    track_id = int(
-                                        boxes.id[i]
-                                        .item()
-                                    )
-
-                                except Exception:
-
-                                    track_id = -1
-
-                            if isinstance(
-                                model.names,
-                                dict
-                            ):
-
+                            if isinstance(model.names, dict):
                                 label = model.names.get(
                                     cls,
                                     str(cls)
                                 )
-
                             else:
+                                label = model.names[cls]
 
-                                label = model.names[
-                                    cls
-                                ]
-
+                            track_id = -1
                             zone = "MONITORING"
                             loitering = False
                             abnormal = False
 
                             if label == "person":
-
                                 people += 1
 
-                                if track_id >= 0:
+                                center_x = int(
+                                    (x1 + x2) / 2
+                                )
 
-                                    process_person(
-                                        track_id,
-                                        confidence,
-                                        x1,
-                                        y1,
-                                        x2,
-                                        y2,
-                                        frame
-                                    )
+                                center_y = int(
+                                    (y1 + y2) / 2
+                                )
 
-                                    track = tracks.get(
-                                        track_id,
-                                        {}
-                                    )
+                                track_id = find_person_track(
+                                    center_x,
+                                    center_y
+                                )
 
-                                    zone = track.get(
-                                        "zone",
-                                        "MONITORING"
-                                    )
+                                process_person(
+                                    track_id,
+                                    confidence,
+                                    x1,
+                                    y1,
+                                    x2,
+                                    y2,
+                                    display_frame
+                                )
 
-                                    loitering = track.get(
-                                        "loitering",
-                                        False
-                                    )
+                                track = tracks.get(
+                                    track_id,
+                                    {}
+                                )
 
-                                    abnormal = track.get(
-                                        "abnormal",
-                                        False
-                                    )
+                                zone = track.get(
+                                    "zone",
+                                    "MONITORING"
+                                )
+
+                                loitering = track.get(
+                                    "loitering",
+                                    False
+                                )
+
+                                abnormal = track.get(
+                                    "abnormal",
+                                    False
+                                )
 
                             draw_detection(
-                                frame,
+                                display_frame,
                                 x1,
                                 y1,
                                 x2,
@@ -814,47 +711,33 @@ def process_frame(frame):
                             )
 
             except Exception as e:
-
-                print(
-                    "YOLO error:",
-                    e
-                )
+                print("YOLO error:", e)
 
         cleanup_tracks()
 
-        score, level, reasons = (
-            calculate_risk(
-                people
-            )
+        score, level, reasons = calculate_risk(
+            people
         )
 
         inference = (
             time.time() - start
         ) * 1000
 
-        with state_lock:
+        previous_fps = state["fps"]
 
-            previous_fps = state["fps"]
-
-        if inference > 0:
-
-            instant_fps = (
-                1000 /
-                inference
-            )
-
-        else:
-
-            instant_fps = previous_fps
+        instant_fps = (
+            1000 / inference
+            if inference > 0
+            else previous_fps
+        )
 
         fps = (
-            previous_fps * 0.8
+            previous_fps * 0.7
             +
-            instant_fps * 0.2
+            instant_fps * 0.3
         )
 
         with state_lock:
-
             state["people"] = people
             state["objects"] = objects
             state["fps"] = fps
@@ -865,42 +748,35 @@ def process_frame(frame):
             state["camera"] = True
             state["yolo"] = model is not None
 
-        draw_overlay(frame)
+        draw_overlay(display_frame)
 
         ok, encoded = cv2.imencode(
             ".jpg",
-            frame,
+            display_frame,
             [
                 cv2.IMWRITE_JPEG_QUALITY,
-                85
+                60
             ]
         )
 
         if ok:
+            jpeg = encoded.tobytes()
 
             with frame_lock:
+                latest_jpeg = jpeg
 
-                latest_jpeg = (
-                    encoded.tobytes()
-                )
+            del jpeg
 
-        last_frame_time = time.time()
+        del display_frame
 
 
 def generate_video():
-
     while True:
-
         with frame_lock:
-
             frame = latest_jpeg
 
         if frame is None:
-
-            time.sleep(
-                0.05
-            )
-
+            time.sleep(0.1)
             continue
 
         yield (
@@ -910,12 +786,11 @@ def generate_video():
             + b"\r\n"
         )
 
-        time.sleep(0.03)
+        time.sleep(0.05)
 
 
 @app.route("/")
 def home():
-
     return send_from_directory(
         BASE_DIR,
         "index.html"
@@ -924,53 +799,43 @@ def home():
 
 @app.route("/video_feed")
 def video_feed():
-
     return Response(
         generate_video(),
-        mimetype=
-            "multipart/x-mixed-replace; boundary=frame"
+        mimetype="multipart/x-mixed-replace; boundary=frame"
     )
 
 
-@app.route(
-    "/api/frame",
-    methods=["POST"]
-)
+@app.route("/api/frame", methods=["POST"])
 def receive_frame():
-
-    global last_frame_time
-
     try:
-
-        data = (
-            request.get_json(
-                silent=True
-            )
-            or {}
-        )
+        data = request.get_json(
+            silent=True
+        ) or {}
 
         image_data = data.get("image")
 
         if not image_data:
-
             return jsonify({
                 "success": False,
-                "error":
-                    "No image received"
+                "error": "No image received"
             }), 400
 
         if "," in image_data:
-
-            image_data = (
-                image_data.split(
-                    ",",
-                    1
-                )[1]
-            )
+            image_data = image_data.split(
+                ",",
+                1
+            )[1]
 
         raw = base64.b64decode(
-            image_data
+            image_data,
+            validate=False
         )
+
+        if len(raw) > 1500000:
+            return jsonify({
+                "success": False,
+                "error": "Frame too large"
+            }), 413
 
         array = np.frombuffer(
             raw,
@@ -982,23 +847,21 @@ def receive_frame():
             cv2.IMREAD_COLOR
         )
 
-        if frame is None:
+        del raw
+        del array
 
+        if frame is None:
             return jsonify({
                 "success": False,
-                "error":
-                    "Invalid image"
+                "error": "Invalid image"
             }), 400
 
-        process_frame(
-            frame
-        )
+        process_frame(frame)
+
+        del frame
 
         with state_lock:
-
-            result = dict(
-                state
-            )
+            result = dict(state)
 
         return jsonify({
             "success": True,
@@ -1006,219 +869,129 @@ def receive_frame():
         })
 
     except Exception as e:
-
-        print(
-            "Frame error:",
-            e
-        )
+        print("Frame error:", e)
 
         return jsonify({
             "success": False,
             "error": str(e)
         }), 500
 
+
 @app.route("/api/health")
 def health():
-
     with state_lock:
-
         yolo_ok = state["yolo"]
 
     camera_ok = (
-        time.time() -
-        last_frame_time
+        time.time() - last_frame_time
         <= CAMERA_TIMEOUT
     )
 
-    with state_lock:
-
-        state["camera"] = camera_ok
-
     return jsonify({
         "success": True,
-        "service":
-            "VisionGuard",
-        "camera":
-            camera_ok,
-        "yolo":
-            yolo_ok,
-        "status":
-            "running"
+        "service": "VisionGuard",
+        "camera": camera_ok,
+        "yolo": yolo_ok,
+        "status": "running"
     })
 
 
 @app.route("/api/status")
 def status():
-
     camera_ok = (
-        time.time() -
-        last_frame_time
+        time.time() - last_frame_time
         <= CAMERA_TIMEOUT
     )
 
     with state_lock:
-
         state["camera"] = camera_ok
-
-        result = dict(
-            state
-        )
+        result = dict(state)
 
     result.update({
-
-        "tracker":
-            "ByteTrack",
-
-        "model":
-            "YOLOv8n",
-
-        "cameraName":
-            "Browser Webcam",
-
+        "tracker": "Lightweight",
+        "model": "YOLOv8n",
+        "cameraName": "Browser Webcam",
         "features": {
-
-            "entryZone":
-                True,
-
-            "restrictedZone":
-                True,
-
-            "loitering":
-                True,
-
-            "abnormalMovement":
-                True,
-
-            "crowdDetection":
-                True,
-
-            "entryExit":
-                True,
-
-            "incidentEvidence":
-                True
-
+            "entryZone": True,
+            "restrictedZone": True,
+            "loitering": True,
+            "abnormalMovement": True,
+            "crowdDetection": True,
+            "entryExit": True,
+            "incidentEvidence": True
         }
-
     })
 
-    return jsonify(
-        result
-    )
+    return jsonify(result)
 
 
 @app.route("/api/incidents")
 def get_incidents():
-
     with state_lock:
-
-        data = list(
-            incidents
-        )
+        data = list(incidents)
 
     return jsonify({
-
-        "success":
-            True,
-
-        "count":
-            len(data),
-
-        "incidents":
-            data
-
+        "success": True,
+        "count": len(data),
+        "incidents": data
     })
 
 
-@app.route(
-    "/api/incidents",
-    methods=["POST"]
-)
+@app.route("/api/incidents", methods=["POST"])
 def add_incident():
-
     global incident_id
 
-    data = (
-        request.get_json(
-            silent=True
-        )
-        or {}
-    )
+    data = request.get_json(
+        silent=True
+    ) or {}
 
     incident = {
-
-        "id":
-            incident_id,
-
-        "type":
-            data.get(
-                "type",
-                "Manual Incident"
-            ),
-
-        "trackingId":
-            data.get(
-                "trackingId",
-                -1
-            ),
-
-        "confidence":
-            data.get(
-                "confidence",
-                0
-            ),
-
-        "risk":
-            data.get(
-                "risk",
-                50
-            ),
-
-        "severity":
-            data.get(
-                "severity",
-                "MEDIUM"
-            ),
-
-        "reason":
-            data.get(
-                "reason",
-                "Manual incident"
-            ),
-
-        "camera":
-            "Browser Webcam",
-
-        "timestamp":
-            datetime.now().strftime(
-                "%Y-%m-%d %H:%M:%S"
-            ),
-
-        "evidence":
-            None
+        "id": incident_id,
+        "type": data.get(
+            "type",
+            "Manual Incident"
+        ),
+        "trackingId": data.get(
+            "trackingId",
+            -1
+        ),
+        "confidence": data.get(
+            "confidence",
+            0
+        ),
+        "risk": data.get(
+            "risk",
+            50
+        ),
+        "severity": data.get(
+            "severity",
+            "MEDIUM"
+        ),
+        "reason": data.get(
+            "reason",
+            "Manual incident"
+        ),
+        "camera": "Browser Webcam",
+        "timestamp": datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        ),
+        "evidence": None
     }
 
     with state_lock:
-
         incidents.insert(
             0,
             incident
         )
 
-        if len(incidents) > 100:
-
-            incidents.pop()
+        if len(incidents) > 30:
+            del incidents[30:]
 
     incident_id += 1
 
     return jsonify({
-
-        "success":
-            True,
-
-        "incident":
-            incident
-
+        "success": True,
+        "incident": incident
     })
 
 
@@ -1226,41 +999,26 @@ def add_incident():
     "/api/incidents/<int:incident_number>",
     methods=["DELETE"]
 )
-def delete_incident(
-    incident_number
-):
-
+def delete_incident(incident_number):
     global incidents
 
     with state_lock:
-
-        before = len(
-            incidents
-        )
+        before = len(incidents)
 
         incidents = [
-            x
-            for x in incidents
-            if x["id"] !=
-            incident_number
+            x for x in incidents
+            if x["id"] != incident_number
         ]
 
-        deleted = (
-            len(incidents) <
-            before
-        )
+        deleted = len(incidents) < before
 
     return jsonify({
-        "success":
-            deleted
+        "success": deleted
     })
 
 
-@app.route(
-    "/evidence/<path:filename>"
-)
+@app.route("/evidence/<path:filename>")
 def evidence(filename):
-
     return send_from_directory(
         EVIDENCE_DIR,
         filename
@@ -1269,126 +1027,60 @@ def evidence(filename):
 
 @app.route("/api/config")
 def config():
-
     return jsonify({
-
-        "confidence":
-            CONFIDENCE,
-
-        "loiteringSeconds":
-            LOITERING_SECONDS,
-
-        "abnormalSpeed":
-            ABNORMAL_SPEED,
-
-        "crowdThreshold":
-            CROWD_THRESHOLD,
-
-        "entryZoneEnd":
-            ENTRY_END,
-
-        "restrictedZoneStart":
-            RESTRICTED_START,
-
-        "camera":
-            "Browser Webcam",
-
-        "model":
-            "YOLOv8n"
-
+        "confidence": CONFIDENCE,
+        "loiteringSeconds": LOITERING_SECONDS,
+        "abnormalSpeed": ABNORMAL_SPEED,
+        "crowdThreshold": CROWD_THRESHOLD,
+        "entryZoneEnd": ENTRY_END,
+        "restrictedZoneStart": RESTRICTED_START,
+        "camera": "Browser Webcam",
+        "model": "YOLOv8n",
+        "inferenceSize": MODEL_SIZE,
+        "inferenceInterval": INFERENCE_INTERVAL
     })
 
 
 @app.route("/api/features")
 def features():
-
     return jsonify({
-
         "entryZone": {
-
-            "enabled":
-                True,
-
-            "description":
-                "Left-side access and entry area"
-
+            "enabled": True,
+            "description": "Left-side access and entry area"
         },
-
         "monitoringZone": {
-
-            "enabled":
-                True,
-
-            "description":
-                "Central normal monitoring area"
-
+            "enabled": True,
+            "description": "Central normal monitoring area"
         },
-
         "restrictedZone": {
-
-            "enabled":
-                True,
-
-            "description":
-                "Right-side restricted security area"
-
+            "enabled": True,
+            "description": "Right-side restricted security area"
         },
-
         "loitering": {
-
-            "enabled":
-                True,
-
-            "thresholdSeconds":
-                LOITERING_SECONDS
-
+            "enabled": True,
+            "thresholdSeconds": LOITERING_SECONDS
         },
-
         "abnormalMovement": {
-
-            "enabled":
-                True,
-
-            "speedThreshold":
-                ABNORMAL_SPEED
-
+            "enabled": True,
+            "speedThreshold": ABNORMAL_SPEED
         },
-
         "crowdDetection": {
-
-            "enabled":
-                True,
-
-            "threshold":
-                CROWD_THRESHOLD
-
+            "enabled": True,
+            "threshold": CROWD_THRESHOLD
         },
-
         "entryExit": {
-
-            "enabled":
-                True,
-
-            "description":
-                "Zone-to-zone movement tracking"
-
+            "enabled": True,
+            "description": "Zone-to-zone movement tracking"
         },
-
         "incidentEvidence": {
-
-            "enabled":
-                True
-
+            "enabled": True
         }
-
     })
 
 
 @app.route("/api/reset")
 def reset_statistics():
-
     with state_lock:
-
         state["entered"] = 0
         state["exited"] = 0
         state["risk"] = 5
@@ -1399,58 +1091,12 @@ def reset_statistics():
     cooldowns.clear()
 
     return jsonify({
-
-        "success":
-            True,
-
-        "message":
-            "Detection statistics reset"
-
+        "success": True,
+        "message": "Detection statistics reset"
     })
 
 
 if __name__ == "__main__":
-
-    print(
-        "VisionGuard AI Surveillance"
-    )
-
-    print(
-        "YOLOv8:",
-        "READY"
-        if model
-        else
-        "UNAVAILABLE"
-    )
-
-    print(
-        "Camera: Browser Webcam"
-    )
-
-    print(
-        "Entry Zone: LEFT"
-    )
-
-    print(
-        "Monitoring Zone: CENTER"
-    )
-
-    print(
-        "Restricted Zone: RIGHT"
-    )
-
-    print(
-        "Loitering: ENABLED"
-    )
-
-    print(
-        "Abnormal Movement: ENABLED"
-    )
-
-    print(
-        "Crowd Detection: ENABLED"
-    )
-
     app.run(
         host="0.0.0.0",
         port=PORT,
