@@ -1806,15 +1806,12 @@ async function startWebcam() {
         return;
     }
 
-    const video =
-        document.getElementById(
-            "webcam"
-        );
-
-    const status =
-        document.getElementById(
-            "webcamStatus"
-        );
+    const video = document.getElementById("webcam");
+    const preview = document.getElementById("webcamPreview");
+    const status = document.getElementById("webcamStatus");
+    const previewStatus = document.getElementById("previewStatus");
+    const cameraStatus = document.getElementById("camera");
+    const camStatus = document.getElementById("camStatus");
 
     try {
 
@@ -1822,83 +1819,143 @@ async function startWebcam() {
             !navigator.mediaDevices ||
             !navigator.mediaDevices.getUserMedia
         ) {
-
             throw new Error(
-                "Webcam access is not supported."
+                "Webcam access is not supported by this browser or page."
             );
-
         }
 
         status.textContent =
             "Requesting camera permission...";
 
-        webcamStream =
+        // Request the browser webcam.
+        // Keep the constraints simple so device-specific settings
+        // do not prevent the camera from opening.
+        const stream =
             await navigator.mediaDevices.getUserMedia({
-
-                video: {
-                    width: {
-                        ideal: 640
-                    },
-
-                    height: {
-                        ideal: 480
-                    },
-
-                    facingMode: "user"
-
-                },
-
+                video: true,
                 audio: false
-
             });
 
-        video.srcObject = webcamStream;
+        // Store the stream only after getUserMedia succeeds.
+        webcamStream = stream;
 
-        const preview = document.getElementById("webcamPreview");
-        if (preview) {
-            preview.srcObject = webcamStream;
-            await preview.play();
+        // Hidden video used for frame capture.
+        if (video) {
+            video.srcObject = stream;
+            video.muted = true;
+            video.playsInline = true;
+
+            video.play().catch(function (error) {
+                console.warn("Hidden video play warning:", error);
+            });
         }
 
-        const previewStatus = document.getElementById("previewStatus");
+        // Visible browser webcam preview.
+        // A preview playback failure must NOT be treated as
+        // a camera-permission failure.
+        if (preview) {
+            preview.srcObject = stream;
+            preview.muted = true;
+            preview.autoplay = true;
+            preview.playsInline = true;
+
+            preview.onloadedmetadata = function () {
+                preview.play().catch(function (error) {
+                    console.warn("Preview play warning:", error);
+                });
+            };
+
+            preview.play().catch(function (error) {
+                console.warn("Preview play warning:", error);
+            });
+        }
+
+        // Update camera status.
         if (previewStatus) {
             previewStatus.textContent = "● ON";
             previewStatus.style.color = "#34d399";
         }
 
+        if (cameraStatus) {
+            cameraStatus.textContent = "ONLINE";
+            cameraStatus.className = "ok";
+        }
+
+        if (camStatus) {
+            camStatus.textContent = "ONLINE";
+            camStatus.className = "ok";
+        }
+
         status.textContent = "● Webcam active";
+        status.className = "small ok";
 
-        status.className =
-            "small ok";
+        // If the browser/device stops the camera, update the UI.
+        stream.getVideoTracks().forEach(function (track) {
+            track.addEventListener("ended", function () {
+                console.warn("Webcam track ended.");
+                stopWebcam();
+            });
+        });
 
-        webcamTimer =
-            setInterval(
-                captureAndSendFrame,
-                300
-            );
+        // Send frames to the Flask backend for AI processing.
+        webcamTimer = setInterval(
+            captureAndSendFrame,
+            300
+        );
+
+        // Send the first frame immediately instead of waiting 300 ms.
+        captureAndSendFrame();
 
     } catch (error) {
 
         console.error(
+            "WEBCAM ERROR:",
+            error.name,
+            error.message,
             error
         );
 
+        // Stop any partially opened stream.
+        if (webcamStream) {
+            webcamStream.getTracks().forEach(function (track) {
+                track.stop();
+            });
+        }
+
         webcamStream = null;
 
-        status.textContent =
-            "Camera permission denied/unavailable";
+        if (status) {
+            status.textContent =
+                "Camera error: " +
+                (error.name || "Unknown error");
 
-        status.className =
-            "small critical";
+            status.className =
+                "small critical";
+        }
+
+        if (previewStatus) {
+            previewStatus.textContent = "ERROR";
+            previewStatus.style.color = "#ff4d4d";
+        }
+
+        if (cameraStatus) {
+            cameraStatus.textContent = "ERROR";
+            cameraStatus.className = "critical";
+        }
+
+        if (camStatus) {
+            camStatus.textContent = "ERROR";
+            camStatus.className = "critical";
+        }
 
         alert(
-            "Please allow camera access in your browser to use VisionGuard."
+            "VisionGuard camera error:\n\n" +
+            (error.name || "Unknown error") +
+            "\n" +
+            (error.message || "Unable to access the webcam.")
         );
-
     }
-
 }
-
 
 function stopWebcam() {
 
