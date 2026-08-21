@@ -102,6 +102,11 @@ button{
     font-weight:700
 }
 
+.system.warning{
+    background:#422006;
+    color:#fbbf24
+}
+
 .content{
     padding:22px
 }
@@ -176,7 +181,9 @@ button{
 .video img{
     display:block;
     width:100%;
-    height:auto
+    height:auto;
+    min-height:300px;
+    object-fit:contain
 }
 
 .live{
@@ -292,6 +299,10 @@ button{
     border-radius:7px;
     font-size:12px;
     font-weight:600
+}
+
+.btn:hover{
+    opacity:.9
 }
 
 .btn.secondary{
@@ -514,7 +525,24 @@ button{
     display:none
 }
 
+.webcam-source{
+    display:none
+}
+.browser-preview{
+    width:100%;
+    display:block;
+    background:#000;
+    border-radius:8px;
+    min-height:300px;
+    object-fit:contain;
+    transform:scaleX(-1)
+}
+.camera-preview-panel{
+    margin-top:12px;
+}
+
 @media(max-width:1050px){
+
     .cards{
         grid-template-columns:repeat(2,1fr)
     }
@@ -522,9 +550,11 @@ button{
     .grid{
         grid-template-columns:1fr
     }
+
 }
 
 @media(max-width:700px){
+
     .sidebar{
         width:65px
     }
@@ -557,6 +587,11 @@ button{
     .stats{
         grid-template-columns:repeat(2,1fr)
     }
+
+    .info{
+        grid-template-columns:1fr
+    }
+
 }
 </style>
 </head>
@@ -564,26 +599,60 @@ button{
 <body>
 
 <div class="login" id="login">
+
     <div class="loginbox">
-        <h2><span style="color:#20d4f4">Vision</span>Guard</h2>
-        <p>AI-Powered Smart Surveillance</p>
 
-        <input id="email"
-               value="admin@visionguard.local"
-               placeholder="Email">
+        <h2>
+            <span style="color:#20d4f4">Vision</span>Guard
+        </h2>
 
-        <input id="password"
-               type="password"
-               value="admin123"
-               placeholder="Password">
+        <p>
+            AI-Powered Smart Surveillance
+        </p>
 
-        <button class="btn" onclick="loginUser()">Sign In</button>
+        <input
+            id="email"
+            value="admin@visionguard.local"
+            placeholder="Email"
+        >
 
-        <div id="loginError" class="error">
+        <input
+            id="password"
+            type="password"
+            value="admin123"
+            placeholder="Password"
+        >
+
+        <button
+            class="btn"
+            onclick="loginUser()"
+        >
+            Sign In
+        </button>
+
+        <div
+            id="loginError"
+            class="error"
+        >
             Invalid credentials
         </div>
+
     </div>
+
 </div>
+
+<video
+    id="webcam"
+    class="webcam-source"
+    autoplay
+    playsinline
+    muted
+></video>
+
+<canvas
+    id="captureCanvas"
+    class="webcam-source"
+></canvas>
 
 <aside class="sidebar">
 
@@ -593,40 +662,58 @@ button{
 
     <nav class="nav">
 
-        <button class="active"
-                onclick="page('dashboard',this)">
+        <button
+            class="active"
+            onclick="page('dashboard',this)"
+        >
             ▦ Dashboard
         </button>
 
-        <button onclick="page('detection',this)">
+        <button
+            onclick="page('detection',this)"
+        >
             ◉ AI Detection
         </button>
 
-        <button onclick="page('cameras',this)">
+        <button
+            onclick="page('cameras',this)"
+        >
             ◉ Cameras
         </button>
 
-        <button onclick="page('incidents',this)">
+        <button
+            onclick="page('incidents',this)"
+        >
             ⚠ Incidents
         </button>
 
-        <button onclick="page('analytics',this)">
+        <button
+            onclick="page('analytics',this)"
+        >
             ◈ Analytics
         </button>
 
-        <button onclick="page('reports',this)">
+        <button
+            onclick="page('reports',this)"
+        >
             ▤ Reports
         </button>
 
-        <button onclick="page('security',this)">
+        <button
+            onclick="page('security',this)"
+        >
             ◇ Security
         </button>
 
-        <button onclick="page('settings',this)">
+        <button
+            onclick="page('settings',this)"
+        >
             ⚙ Settings
         </button>
 
-        <button onclick="logout()">
+        <button
+            onclick="logout()"
+        >
             ↪ Sign Out
         </button>
 
@@ -642,7 +729,10 @@ button{
         VisionGuard Dashboard
     </h1>
 
-    <div id="system" class="system">
+    <div
+        id="system"
+        class="system"
+    >
         ● SYSTEM ONLINE
     </div>
 
@@ -650,32 +740,90 @@ button{
 
 <div class="content">
 
-<section id="dashboard" class="page active">
+<section
+    id="dashboard"
+    class="page active"
+>
 
 <div class="cards">
 
 <div class="card">
-<div class="card-title">People Detected</div>
-<div id="people" class="value">0</div>
-<div class="small">Current frame</div>
+
+    <div class="card-title">
+        People Detected
+    </div>
+
+    <div
+        id="people"
+        class="value"
+    >
+        0
+    </div>
+
+    <div class="small">
+        Current frame
+    </div>
+
 </div>
 
 <div class="card">
-<div class="card-title">Objects</div>
-<div id="objects" class="value">0</div>
-<div class="small">YOLO detections</div>
+
+    <div class="card-title">
+        Objects
+    </div>
+
+    <div
+        id="objects"
+        class="value"
+    >
+        0
+    </div>
+
+    <div class="small">
+        YOLO detections
+    </div>
+
 </div>
 
 <div class="card">
-<div class="card-title">Risk Score</div>
-<div id="risk" class="value">0</div>
-<div id="riskLevel" class="small ok">LOW</div>
+
+    <div class="card-title">
+        Risk Score
+    </div>
+
+    <div
+        id="risk"
+        class="value"
+    >
+        0
+    </div>
+
+    <div
+        id="riskLevel"
+        class="small ok"
+    >
+        LOW
+    </div>
+
 </div>
 
 <div class="card">
-<div class="card-title">FPS</div>
-<div id="fps" class="value">0</div>
-<div class="small">Processing speed</div>
+
+    <div class="card-title">
+        FPS
+    </div>
+
+    <div
+        id="fps"
+        class="value"
+    >
+        0
+    </div>
+
+    <div class="small">
+        Processing speed
+    </div>
+
 </div>
 
 </div>
@@ -684,42 +832,91 @@ button{
 
 <div class="panel">
 
-<h2>Live Surveillance</h2>
+    <h2>
+        Live Surveillance
+    </h2>
 
-<div class="video">
+    <div class="actions">
 
-<div class="live">
-● LIVE
-</div>
+        <button
+            class="btn"
+            onclick="startWebcam()"
+        >
+            📷 Enable My Webcam
+        </button>
 
-<img src="/video_feed"
-     alt="Live surveillance">
+        <button
+            class="btn danger"
+            onclick="stopWebcam()"
+        >
+            Stop Webcam
+        </button>
 
-</div>
+        <span
+            id="webcamStatus"
+            class="small"
+        >
+            Camera not started
+        </span>
 
-<div class="stats">
+    </div>
 
-<div class="stat">
-<b id="dPeople">0</b>
-<span>PEOPLE</span>
-</div>
+    <div class="notice">
+        Allow camera permission when the browser asks.
+        The browser camera is captured and sent to VisionGuard
+        for YOLOv8 analysis. The processed result appears below.
+    </div>
 
-<div class="stat">
-<b id="dObjects">0</b>
-<span>OBJECTS</span>
-</div>
+    <div class="camera-preview-panel">
+        <div class="notice" style="margin-bottom:8px">
+            <b style="color:#e8eef8">Browser Camera Preview</b>
+            <span id="previewStatus" style="float:right">OFF</span>
+        </div>
+        <video id="webcamPreview" class="browser-preview"
+               autoplay playsinline muted></video>
+    </div>
 
-<div class="stat">
-<b id="dEntered">0</b>
-<span>ENTERED</span>
-</div>
+    <div class="notice" style="margin-top:12px">
+        <b style="color:#e8eef8">AI Detection Output</b>
+        <span id="aiFeedStatus" style="float:right">WAITING</span>
+    </div>
 
-<div class="stat">
-<b id="dExited">0</b>
-<span>EXITED</span>
-</div>
+    <div class="video">
 
-</div>
+        <div class="live">
+            ● LIVE
+        </div>
+
+        <img
+            src="/video_feed"
+            alt="Live surveillance"
+        >
+
+    </div>
+
+    <div class="stats">
+
+        <div class="stat">
+            <b id="dPeople">0</b>
+            <span>PEOPLE</span>
+        </div>
+
+        <div class="stat">
+            <b id="dObjects">0</b>
+            <span>OBJECTS</span>
+        </div>
+
+        <div class="stat">
+            <b id="dEntered">0</b>
+            <span>ENTERED</span>
+        </div>
+
+        <div class="stat">
+            <b id="dExited">0</b>
+            <span>EXITED</span>
+        </div>
+
+    </div>
 
 </div>
 
@@ -727,43 +924,87 @@ button{
 
 <div class="panel">
 
-<h2>AI System Status</h2>
+    <h2>
+        AI System Status
+    </h2>
 
-<div class="rows">
+    <div class="rows">
 
-<div class="row">
-<span class="label">YOLOv8</span>
-<b id="yolo" class="ok">READY</b>
-</div>
+        <div class="row">
+            <span class="label">
+                YOLOv8
+            </span>
 
-<div class="row">
-<span class="label">Webcam</span>
-<b id="camera" class="ok">ONLINE</b>
-</div>
+            <b
+                id="yolo"
+                class="ok"
+            >
+                READY
+            </b>
+        </div>
 
-<div class="row">
-<span class="label">Tracker</span>
-<b class="ok">ByteTrack</b>
-</div>
+        <div class="row">
 
-<div class="row">
-<span class="label">Inference</span>
-<b id="inference">0 ms</b>
-</div>
+            <span class="label">
+                Webcam
+            </span>
 
-<div class="row">
-<span class="label">Model</span>
-<b>YOLOv8n</b>
-</div>
+            <b
+                id="camera"
+                class="warn"
+            >
+                WAITING
+            </b>
 
-</div>
+        </div>
+
+        <div class="row">
+
+            <span class="label">
+                Tracker
+            </span>
+
+            <b class="ok">
+                ByteTrack
+            </b>
+
+        </div>
+
+        <div class="row">
+
+            <span class="label">
+                Inference
+            </span>
+
+            <b id="inference">
+                0 ms
+            </b>
+
+        </div>
+
+        <div class="row">
+
+            <span class="label">
+                Model
+            </span>
+
+            <b>
+                YOLOv8n
+            </b>
+
+        </div>
+
+    </div>
+
 </div>
 
 <div class="panel">
 
-<h2>Recent Incidents</h2>
+    <h2>
+        Recent Incidents
+    </h2>
 
-<div id="recent"></div>
+    <div id="recent"></div>
 
 </div>
 
@@ -774,532 +1015,736 @@ button{
 </section>
 
 
-<section id="detection" class="page">
+<section
+    id="detection"
+    class="page"
+>
 
 <div class="panel">
 
-<h2>Real-Time YOLOv8 Detection</h2>
+    <h2>
+        Real-Time YOLOv8 Detection
+    </h2>
 
-<div class="video">
+    <div class="actions">
 
-<div class="live">
-● AI LIVE
-</div>
+        <button
+            class="btn"
+            onclick="startWebcam()"
+        >
+            📷 Enable My Webcam
+        </button>
 
-<img src="/video_feed"
-     alt="YOLO detection">
+        <button
+            class="btn danger"
+            onclick="stopWebcam()"
+        >
+            Stop Webcam
+        </button>
 
-</div>
+    </div>
 
-<div class="stats">
+    <div class="video">
 
-<div class="stat">
-<b id="aPeople">0</b>
-<span>PEOPLE</span>
-</div>
+        <div class="live">
+            ● AI LIVE
+        </div>
 
-<div class="stat">
-<b id="aObjects">0</b>
-<span>OBJECTS</span>
-</div>
+        <img
+            src="/video_feed"
+            alt="YOLO detection"
+        >
 
-<div class="stat">
-<b id="aFPS">0</b>
-<span>FPS</span>
-</div>
+    </div>
 
-<div class="stat">
-<b id="aRisk">0</b>
-<span>RISK</span>
-</div>
+    <div class="stats">
 
-</div>
+        <div class="stat">
+            <b id="aPeople">0</b>
+            <span>PEOPLE</span>
+        </div>
+
+        <div class="stat">
+            <b id="aObjects">0</b>
+            <span>OBJECTS</span>
+        </div>
+
+        <div class="stat">
+            <b id="aFPS">0</b>
+            <span>FPS</span>
+        </div>
+
+        <div class="stat">
+            <b id="aRisk">0</b>
+            <span>RISK</span>
+        </div>
+
+    </div>
 
 </div>
 
 <div class="panel">
 
-<h2>Detection Engine</h2>
+    <h2>
+        Detection Engine
+    </h2>
 
-<div class="info">
+    <div class="info">
 
-<div>
-<span>MODEL</span>
-<b>YOLOv8n</b>
-</div>
+        <div>
+            <span>MODEL</span>
+            <b>YOLOv8n</b>
+        </div>
 
-<div>
-<span>TRACKER</span>
-<b>ByteTrack</b>
-</div>
+        <div>
+            <span>TRACKER</span>
+            <b>ByteTrack</b>
+        </div>
 
-<div>
-<span>INFERENCE</span>
-<b id="aInference">0 ms</b>
-</div>
+        <div>
+            <span>INFERENCE</span>
+            <b id="aInference">0 ms</b>
+        </div>
 
-<div>
-<span>CAMERA</span>
-<b>Laptop Webcam</b>
-</div>
+        <div>
+            <span>CAMERA</span>
+            <b>Browser Webcam</b>
+        </div>
 
-</div>
+    </div>
 
 </div>
 
 </section>
 
 
-<section id="cameras" class="page">
+<section
+    id="cameras"
+    class="page"
+>
 
 <div class="panel">
 
-<h2>Camera Management</h2>
+    <h2>
+        Camera Management
+    </h2>
 
-<div class="notice">
-Active camera is the laptop webcam connected through OpenCV.
-The AI pipeline processes the same live stream shown below.
-</div>
+    <div class="notice">
+        The active camera is the visitor's browser webcam.
+        The browser securely captures the camera stream
+        and sends frames to the VisionGuard AI backend.
+    </div>
 
-<div class="info">
+    <div class="actions">
 
-<div>
-<span>CAMERA</span>
-<b>Laptop Webcam</b>
-</div>
+        <button
+            class="btn"
+            onclick="startWebcam()"
+        >
+            📷 Enable Webcam
+        </button>
 
-<div>
-<span>STATUS</span>
-<b id="camStatus" class="ok">ONLINE</b>
-</div>
+        <button
+            class="btn danger"
+            onclick="stopWebcam()"
+        >
+            Stop Webcam
+        </button>
 
-<div>
-<span>MODEL</span>
-<b>YOLOv8n</b>
-</div>
+    </div>
 
-<div>
-<span>TRACKER</span>
-<b>ByteTrack</b>
-</div>
+    <div class="info">
 
-</div>
+        <div>
+            <span>CAMERA</span>
+            <b>Browser Webcam</b>
+        </div>
+
+        <div>
+            <span>STATUS</span>
+            <b
+                id="camStatus"
+                class="warn"
+            >
+                WAITING
+            </b>
+        </div>
+
+        <div>
+            <span>MODEL</span>
+            <b>YOLOv8n</b>
+        </div>
+
+        <div>
+            <span>TRACKER</span>
+            <b>ByteTrack</b>
+        </div>
+
+    </div>
 
 </div>
 
 <div class="panel">
 
-<h2>Live Camera</h2>
+    <h2>
+        Live AI Camera Output
+    </h2>
 
-<div class="video">
+    <div class="video">
 
-<div class="live">
-● CAMERA LIVE
-</div>
+        <div class="live">
+            ● CAMERA LIVE
+        </div>
 
-<img src="/video_feed"
-     alt="Camera">
+        <img
+            src="/video_feed"
+            alt="Camera"
+        >
 
-</div>
+    </div>
 
 </div>
 
 </section>
 
 
-<section id="incidents" class="page">
+<section
+    id="incidents"
+    class="page"
+>
 
 <div class="panel">
 
-<h2>Security Incidents</h2>
+    <h2>
+        Security Incidents
+    </h2>
 
-<div class="actions">
+    <div class="actions">
 
-<button class="btn"
-        onclick="loadIncidents()">
-Refresh
-</button>
+        <button
+            class="btn"
+            onclick="loadIncidents()"
+        >
+            Refresh
+        </button>
 
-<button class="btn secondary"
-        onclick="exportCSV()">
-Export CSV
-</button>
+        <button
+            class="btn secondary"
+            onclick="exportCSV()"
+        >
+            Export CSV
+        </button>
 
-<input id="incidentSearch"
-       placeholder="Search incidents..."
-       oninput="renderIncidents()">
+        <input
+            id="incidentSearch"
+            placeholder="Search incidents..."
+            oninput="renderIncidents()"
+        >
 
-<select id="severityFilter"
-        onchange="renderIncidents()">
+        <select
+            id="severityFilter"
+            onchange="renderIncidents()"
+        >
 
-<option value="">All severity</option>
-<option>CRITICAL</option>
-<option>HIGH</option>
-<option>MEDIUM</option>
-<option>LOW</option>
+            <option value="">
+                All severity
+            </option>
 
-</select>
+            <option>
+                CRITICAL
+            </option>
 
-</div>
+            <option>
+                HIGH
+            </option>
 
-<div id="incidentList"></div>
+            <option>
+                MEDIUM
+            </option>
+
+            <option>
+                LOW
+            </option>
+
+        </select>
+
+    </div>
+
+    <div id="incidentList"></div>
 
 </div>
 
 </section>
 
 
-<section id="analytics" class="page">
+<section
+    id="analytics"
+    class="page"
+>
 
 <div class="cards">
 
 <div class="card">
-<div class="card-title">Total Incidents</div>
-<div id="anIncidents" class="value">0</div>
+
+    <div class="card-title">
+        Total Incidents
+    </div>
+
+    <div
+        id="anIncidents"
+        class="value"
+    >
+        0
+    </div>
+
 </div>
 
 <div class="card">
-<div class="card-title">Entries</div>
-<div id="anEntered" class="value">0</div>
+
+    <div class="card-title">
+        Entries
+    </div>
+
+    <div
+        id="anEntered"
+        class="value"
+    >
+        0
+    </div>
+
 </div>
 
 <div class="card">
-<div class="card-title">Exits</div>
-<div id="anExited" class="value">0</div>
+
+    <div class="card-title">
+        Exits
+    </div>
+
+    <div
+        id="anExited"
+        class="value"
+    >
+        0
+    </div>
+
 </div>
 
 <div class="card">
-<div class="card-title">Current Risk</div>
-<div id="anRisk" class="value">LOW</div>
+
+    <div class="card-title">
+        Current Risk
+    </div>
+
+    <div
+        id="anRisk"
+        class="value"
+    >
+        LOW
+    </div>
+
 </div>
 
 </div>
 
 <div class="panel">
 
-<h2>Live Activity Trend</h2>
+    <h2>
+        Live Activity Trend
+    </h2>
 
-<div id="chart"
-     class="chart">
-</div>
+    <div
+        id="chart"
+        class="chart"
+    ></div>
 
 </div>
 
 <div class="panel">
 
-<h2>Current Detection Metrics</h2>
+    <h2>
+        Current Detection Metrics
+    </h2>
 
-<div class="info">
+    <div class="info">
 
-<div>
-<span>PEOPLE</span>
-<b id="anPeople">0</b>
-</div>
+        <div>
+            <span>PEOPLE</span>
+            <b id="anPeople">0</b>
+        </div>
 
-<div>
-<span>OBJECTS</span>
-<b id="anObjects">0</b>
-</div>
+        <div>
+            <span>OBJECTS</span>
+            <b id="anObjects">0</b>
+        </div>
 
-<div>
-<span>FPS</span>
-<b id="anFPS">0</b>
-</div>
+        <div>
+            <span>FPS</span>
+            <b id="anFPS">0</b>
+        </div>
 
-<div>
-<span>INFERENCE</span>
-<b id="anInference">0 ms</b>
-</div>
+        <div>
+            <span>INFERENCE</span>
+            <b id="anInference">0 ms</b>
+        </div>
 
-</div>
+    </div>
 
 </div>
 
 </section>
 
 
-<section id="reports" class="page">
+<section
+    id="reports"
+    class="page"
+>
 
 <div class="panel">
 
-<h2>Security Reports</h2>
+    <h2>
+        Security Reports
+    </h2>
 
-<div class="notice">
-Generate a local security summary from live VisionGuard data and recorded incidents.
-</div>
+    <div class="notice">
+        Generate a local security summary from live
+        VisionGuard data and recorded incidents.
+    </div>
 
-<div class="actions">
+    <div class="actions">
 
-<button class="btn"
-        onclick="downloadReport()">
-Download Report
-</button>
+        <button
+            class="btn"
+            onclick="downloadReport()"
+        >
+            Download Report
+        </button>
 
-<button class="btn secondary"
-        onclick="window.print()">
-Print Report
-</button>
+        <button
+            class="btn secondary"
+            onclick="window.print()"
+        >
+            Print Report
+        </button>
 
-</div>
+    </div>
 
-<div class="info">
+    <div class="info">
 
-<div>
-<span>PEOPLE CURRENTLY DETECTED</span>
-<b id="rPeople">0</b>
-</div>
+        <div>
+            <span>PEOPLE CURRENTLY DETECTED</span>
+            <b id="rPeople">0</b>
+        </div>
 
-<div>
-<span>OBJECTS CURRENTLY DETECTED</span>
-<b id="rObjects">0</b>
-</div>
+        <div>
+            <span>OBJECTS CURRENTLY DETECTED</span>
+            <b id="rObjects">0</b>
+        </div>
 
-<div>
-<span>ENTRIES</span>
-<b id="rEntered">0</b>
-</div>
+        <div>
+            <span>ENTRIES</span>
+            <b id="rEntered">0</b>
+        </div>
 
-<div>
-<span>EXITS</span>
-<b id="rExited">0</b>
-</div>
+        <div>
+            <span>EXITS</span>
+            <b id="rExited">0</b>
+        </div>
 
-<div>
-<span>INCIDENTS</span>
-<b id="rIncidents">0</b>
-</div>
+        <div>
+            <span>INCIDENTS</span>
+            <b id="rIncidents">0</b>
+        </div>
 
-<div>
-<span>RISK</span>
-<b id="rRisk">LOW</b>
-</div>
+        <div>
+            <span>RISK</span>
+            <b id="rRisk">LOW</b>
+        </div>
 
-</div>
+    </div>
 
 </div>
 
 </section>
 
 
-<section id="security" class="page">
+<section
+    id="security"
+    class="page"
+>
 
 <div class="panel">
 
-<h2>Security Monitoring</h2>
+    <h2>
+        Security Monitoring
+    </h2>
 
-<div class="info">
+    <div class="info">
 
-<div>
-<span>RESTRICTED ZONE</span>
-<b class="ok">ACTIVE</b>
-</div>
+        <div>
+            <span>RESTRICTED ZONE</span>
+            <b class="ok">ACTIVE</b>
+        </div>
 
-<div>
-<span>OBJECT TRACKING</span>
-<b class="ok">ACTIVE</b>
-</div>
+        <div>
+            <span>OBJECT TRACKING</span>
+            <b class="ok">ACTIVE</b>
+        </div>
 
-<div>
-<span>RISK ENGINE</span>
-<b class="ok">ACTIVE</b>
-</div>
+        <div>
+            <span>RISK ENGINE</span>
+            <b class="ok">ACTIVE</b>
+        </div>
 
-<div>
-<span>INCIDENT LOGGING</span>
-<b class="ok">ACTIVE</b>
-</div>
+        <div>
+            <span>INCIDENT LOGGING</span>
+            <b class="ok">ACTIVE</b>
+        </div>
 
-</div>
+    </div>
 
 </div>
 
 <div class="panel">
 
-<h2>Live Security Metrics</h2>
+    <h2>
+        Live Security Metrics
+    </h2>
 
-<div class="rows">
+    <div class="rows">
 
-<div class="row">
-<span class="label">People</span>
-<b id="sPeople">0</b>
-</div>
+        <div class="row">
+            <span class="label">People</span>
+            <b id="sPeople">0</b>
+        </div>
 
-<div class="row">
-<span class="label">Objects</span>
-<b id="sObjects">0</b>
-</div>
+        <div class="row">
+            <span class="label">Objects</span>
+            <b id="sObjects">0</b>
+        </div>
 
-<div class="row">
-<span class="label">Risk</span>
-<b id="sRisk">LOW</b>
-</div>
+        <div class="row">
+            <span class="label">Risk</span>
+            <b id="sRisk">LOW</b>
+        </div>
 
-<div class="row">
-<span class="label">Entered</span>
-<b id="sEntered">0</b>
-</div>
+        <div class="row">
+            <span class="label">Entered</span>
+            <b id="sEntered">0</b>
+        </div>
 
-<div class="row">
-<span class="label">Exited</span>
-<b id="sExited">0</b>
-</div>
+        <div class="row">
+            <span class="label">Exited</span>
+            <b id="sExited">0</b>
+        </div>
 
-<div class="row">
-<span class="label">Incidents</span>
-<b id="sIncidents">0</b>
-</div>
+        <div class="row">
+            <span class="label">Incidents</span>
+            <b id="sIncidents">0</b>
+        </div>
 
-</div>
+    </div>
 
 </div>
 
 </section>
 
 
-<section id="settings" class="page">
+<section
+    id="settings"
+    class="page"
+>
 
 <div class="panel">
 
-<h2>System Settings</h2>
+    <h2>
+        System Settings
+    </h2>
 
-<div class="setting">
+    <div class="setting">
 
-<div>
-<strong>AI Detection</strong>
-<span>YOLOv8 object detection interface</span>
-</div>
+        <div>
+            <strong>AI Detection</strong>
+            <span>
+                YOLOv8 object detection interface
+            </span>
+        </div>
 
-<div class="toggle on"
-     onclick="this.classList.toggle('on')">
-</div>
+        <div
+            class="toggle on"
+            onclick="this.classList.toggle('on')"
+        ></div>
 
-</div>
+    </div>
 
-<div class="setting">
+    <div class="setting">
 
-<div>
-<strong>Incident Monitoring</strong>
-<span>Security event monitoring</span>
-</div>
+        <div>
+            <strong>Incident Monitoring</strong>
+            <span>
+                Security event monitoring
+            </span>
+        </div>
 
-<div class="toggle on"
-     onclick="this.classList.toggle('on')">
-</div>
+        <div
+            class="toggle on"
+            onclick="this.classList.toggle('on')"
+        ></div>
 
-</div>
+    </div>
 
-<div class="setting">
+    <div class="setting">
 
-<div>
-<strong>Browser Alerts</strong>
-<span>Notify when risk becomes HIGH or CRITICAL</span>
-</div>
+        <div>
+            <strong>Browser Alerts</strong>
+            <span>
+                Notify when risk becomes HIGH or CRITICAL
+            </span>
+        </div>
 
-<div id="alertToggle"
-     class="toggle on"
-     onclick="this.classList.toggle('on')">
-</div>
+        <div
+            id="alertToggle"
+            class="toggle on"
+            onclick="this.classList.toggle('on')"
+        ></div>
 
-</div>
+    </div>
 
-<div class="setting">
+    <div class="setting">
 
-<div>
-<strong>Auto Refresh</strong>
-<span>Live dashboard synchronization</span>
-</div>
+        <div>
+            <strong>Auto Refresh</strong>
+            <span>
+                Live dashboard synchronization
+            </span>
+        </div>
 
-<div class="toggle on"></div>
+        <div class="toggle on"></div>
 
-</div>
+    </div>
 
 </div>
 
 <div class="panel">
 
-<h2>System Information</h2>
+    <h2>
+        System Information
+    </h2>
 
-<div class="info">
+    <div class="info">
 
-<div>
-<span>BACKEND</span>
-<b>Flask</b>
-</div>
+        <div>
+            <span>BACKEND</span>
+            <b>Flask</b>
+        </div>
 
-<div>
-<span>AI</span>
-<b>Ultralytics YOLOv8</b>
-</div>
+        <div>
+            <span>AI</span>
+            <b>Ultralytics YOLOv8</b>
+        </div>
 
-<div>
-<span>TRACKING</span>
-<b>ByteTrack</b>
-</div>
+        <div>
+            <span>TRACKING</span>
+            <b>ByteTrack</b>
+        </div>
 
-<div>
-<span>CAMERA</span>
-<b>Laptop Webcam</b>
-</div>
+        <div>
+            <span>CAMERA</span>
+            <b>Browser Webcam</b>
+        </div>
 
-</div>
+    </div>
 
 </div>
 
 </section>
 
 </div>
+
 </main>
 
 
 <script>
 
-let incidents=[];
-let history=[];
-let lastRisk="LOW";
+let incidents = [];
+let history = [];
+let lastRisk = "LOW";
 
-let logged=localStorage.getItem("vg_login");
+let webcamStream = null;
+let webcamTimer = null;
+let sendingFrame = false;
 
-if(logged==="true"){
-    document.getElementById("login").style.display="none";
+let logged =
+    localStorage.getItem("vg_login");
+
+if (logged === "true") {
+
+    document.getElementById(
+        "login"
+    ).style.display = "none";
+
 }
 
 
-function loginUser(){
+function loginUser() {
 
-    let e=document.getElementById("email").value.trim();
-    let p=document.getElementById("password").value;
+    let e =
+        document.getElementById(
+            "email"
+        ).value.trim();
 
-    if(
-        e==="admin@visionguard.local" &&
-        p==="admin123"
-    ){
+    let p =
+        document.getElementById(
+            "password"
+        ).value;
 
-        localStorage.setItem("vg_login","true");
+    if (
+        e === "admin@visionguard.local" &&
+        p === "admin123"
+    ) {
 
-        document.getElementById("login").style.display="none";
+        localStorage.setItem(
+            "vg_login",
+            "true"
+        );
 
-    }else{
+        document.getElementById(
+            "login"
+        ).style.display = "none";
 
-        document.getElementById("loginError").style.display="block";
+    } else {
+
+        document.getElementById(
+            "loginError"
+        ).style.display = "block";
 
     }
+
 }
 
 
-function logout(){
+function logout() {
 
-    localStorage.removeItem("vg_login");
+    stopWebcam();
+
+    localStorage.removeItem(
+        "vg_login"
+    );
 
     location.reload();
 
 }
 
 
-function page(id,btn){
+function page(id, btn) {
 
     document
         .querySelectorAll(".page")
-        .forEach(x=>x.classList.remove("active"));
+        .forEach(
+            x =>
+                x.classList.remove(
+                    "active"
+                )
+        );
 
     document
         .getElementById(id)
@@ -1307,79 +1752,401 @@ function page(id,btn){
 
     document
         .querySelectorAll(".nav button")
-        .forEach(x=>x.classList.remove("active"));
+        .forEach(
+            x =>
+                x.classList.remove(
+                    "active"
+                )
+        );
 
     btn.classList.add("active");
 
-    let names={
+    let names = {
 
-        dashboard:"VisionGuard Dashboard",
+        dashboard:
+            "VisionGuard Dashboard",
 
-        detection:"AI Detection",
+        detection:
+            "AI Detection",
 
-        cameras:"Camera Management",
+        cameras:
+            "Camera Management",
 
-        incidents:"Security Incidents",
+        incidents:
+            "Security Incidents",
 
-        analytics:"Security Analytics",
+        analytics:
+            "Security Analytics",
 
-        reports:"Security Reports",
+        reports:
+            "Security Reports",
 
-        security:"Security Monitoring",
+        security:
+            "Security Monitoring",
 
-        settings:"System Settings"
+        settings:
+            "System Settings"
 
     };
 
-    document.getElementById("title").textContent=names[id];
+    document.getElementById(
+        "title"
+    ).textContent = names[id];
 
-    if(id==="incidents"){
+    if (id === "incidents") {
         loadIncidents();
     }
 
 }
 
 
-function riskClass(el,level){
+async function startWebcam() {
 
-    el.className="small "+
-    (
-        level==="CRITICAL"
-        ?"critical"
-        :
-        level==="HIGH"
-        ?"high"
-        :
-        level==="MEDIUM"
-        ?"warn"
-        :
-        "ok"
-    );
+    if (webcamStream) {
+        return;
+    }
+
+    const video =
+        document.getElementById(
+            "webcam"
+        );
+
+    const status =
+        document.getElementById(
+            "webcamStatus"
+        );
+
+    try {
+
+        if (
+            !navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia
+        ) {
+
+            throw new Error(
+                "Webcam access is not supported."
+            );
+
+        }
+
+        status.textContent =
+            "Requesting camera permission...";
+
+        webcamStream =
+            await navigator.mediaDevices.getUserMedia({
+
+                video: {
+                    width: {
+                        ideal: 640
+                    },
+
+                    height: {
+                        ideal: 480
+                    },
+
+                    facingMode: "user"
+
+                },
+
+                audio: false
+
+            });
+
+        video.srcObject = webcamStream;
+
+        const preview = document.getElementById("webcamPreview");
+        if (preview) {
+            preview.srcObject = webcamStream;
+            await preview.play();
+        }
+
+        const previewStatus = document.getElementById("previewStatus");
+        if (previewStatus) {
+            previewStatus.textContent = "● ON";
+            previewStatus.style.color = "#34d399";
+        }
+
+        status.textContent = "● Webcam active";
+
+        status.className =
+            "small ok";
+
+        webcamTimer =
+            setInterval(
+                captureAndSendFrame,
+                300
+            );
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+        webcamStream = null;
+
+        status.textContent =
+            "Camera permission denied/unavailable";
+
+        status.className =
+            "small critical";
+
+        alert(
+            "Please allow camera access in your browser to use VisionGuard."
+        );
+
+    }
 
 }
 
 
-async function update(){
+function stopWebcam() {
 
-    try{
+    if (webcamTimer) {
 
-        let r=await fetch(
-            "/api/status",
-            {
-                cache:"no-store"
-            }
+        clearInterval(
+            webcamTimer
         );
 
-        let d=await r.json();
+        webcamTimer = null;
 
-        let people=d.people??0;
-        let objects=d.objects??0;
-        let risk=d.risk??0;
-        let level=d.riskLevel??"LOW";
-        let fps=Number(d.fps??0);
-        let entered=d.entered??0;
-        let exited=d.exited??0;
-        let inf=Number(d.inferenceTime??0);
+    }
+
+    if (webcamStream) {
+
+        webcamStream
+            .getTracks()
+            .forEach(
+                track =>
+                    track.stop()
+            );
+
+        webcamStream = null;
+
+    }
+
+    const video =
+        document.getElementById(
+            "webcam"
+        );
+
+    if (video) {
+        video.srcObject = null;
+    }
+
+    const preview = document.getElementById("webcamPreview");
+    if (preview) preview.srcObject = null;
+
+    const previewStatus = document.getElementById("previewStatus");
+    if (previewStatus) {
+        previewStatus.textContent = "OFF";
+        previewStatus.style.color = "";
+    }
+
+    const aiFeedStatus = document.getElementById("aiFeedStatus");
+    if (aiFeedStatus) {
+        aiFeedStatus.textContent = "WAITING";
+        aiFeedStatus.style.color = "";
+    }
+
+    const status =
+        document.getElementById(
+            "webcamStatus"
+        );
+
+    if (status) {
+
+        status.textContent =
+            "Camera stopped";
+
+        status.className =
+            "small";
+
+    }
+
+}
+
+
+async function captureAndSendFrame() {
+
+    if (
+        sendingFrame ||
+        !webcamStream
+    ) {
+        return;
+    }
+
+    const video =
+        document.getElementById(
+            "webcam"
+        );
+
+    const canvas =
+        document.getElementById(
+            "captureCanvas"
+        );
+
+    if (
+        !video.videoWidth ||
+        !video.videoHeight
+    ) {
+        return;
+    }
+
+    sendingFrame = true;
+
+    try {
+
+        const width = 640;
+
+        const height =
+            Math.round(
+                video.videoHeight *
+                (
+                    width /
+                    video.videoWidth
+                )
+            );
+
+        canvas.width =
+            width;
+
+        canvas.height =
+            height;
+
+        const ctx =
+            canvas.getContext(
+                "2d"
+            );
+
+        ctx.drawImage(
+            video,
+            0,
+            0,
+            width,
+            height
+        );
+
+        const image =
+            canvas.toDataURL(
+                "image/jpeg",
+                0.65
+            );
+
+        const response =
+            await fetch(
+                "/api/frame",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        image: image
+                    })
+                }
+            );
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(
+                "Frame upload failed: " +
+                response.status + " " + errorText
+            );
+        }
+
+        const aiFeedStatus = document.getElementById("aiFeedStatus");
+        if (aiFeedStatus) {
+            aiFeedStatus.textContent = "● RECEIVING FRAMES";
+            aiFeedStatus.style.color = "#34d399";
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Frame error:",
+            error
+        );
+
+    } finally {
+
+        sendingFrame = false;
+
+    }
+
+}
+
+
+function riskClass(
+    el,
+    level
+) {
+
+    el.className =
+        "small " +
+        (
+            level === "CRITICAL"
+                ? "critical"
+                :
+            level === "HIGH"
+                ? "high"
+                :
+            level === "MEDIUM"
+                ? "warn"
+                :
+                "ok"
+        );
+
+}
+
+
+async function update() {
+
+    try {
+
+        let r =
+            await fetch(
+                "/api/status",
+                {
+                    cache:
+                        "no-store"
+                }
+            );
+
+        let d =
+            await r.json();
+
+        let people =
+            d.people ?? 0;
+
+        let objects =
+            d.objects ?? 0;
+
+        let risk =
+            d.risk ?? 0;
+
+        let level =
+            d.riskLevel ??
+            "LOW";
+
+        let fps =
+            Number(
+                d.fps ?? 0
+            );
+
+        let entered =
+            d.entered ?? 0;
+
+        let exited =
+            d.exited ?? 0;
+
+        let inf =
+            Number(
+                d.inferenceTime ?? 0
+            );
 
 
         [
@@ -1389,8 +2156,18 @@ async function update(){
             "anPeople",
             "rPeople",
             "sPeople"
-        ].forEach(id=>{
-            document.getElementById(id).textContent=people;
+        ].forEach(id => {
+
+            let el =
+                document.getElementById(
+                    id
+                );
+
+            if (el) {
+                el.textContent =
+                    people;
+            }
+
         });
 
 
@@ -1401,8 +2178,18 @@ async function update(){
             "anObjects",
             "rObjects",
             "sObjects"
-        ].forEach(id=>{
-            document.getElementById(id).textContent=objects;
+        ].forEach(id => {
+
+            let el =
+                document.getElementById(
+                    id
+                );
+
+            if (el) {
+                el.textContent =
+                    objects;
+            }
+
         });
 
 
@@ -1410,188 +2197,364 @@ async function update(){
             "fps",
             "aFPS",
             "anFPS"
-        ].forEach(id=>{
-            document.getElementById(id).textContent=fps.toFixed(1);
+        ].forEach(id => {
+
+            let el =
+                document.getElementById(
+                    id
+                );
+
+            if (el) {
+
+                el.textContent =
+                    fps.toFixed(1);
+
+            }
+
         });
 
 
         [
             "risk",
             "aRisk"
-        ].forEach(id=>{
-            document.getElementById(id).textContent=risk;
+        ].forEach(id => {
+
+            let el =
+                document.getElementById(
+                    id
+                );
+
+            if (el) {
+                el.textContent =
+                    risk;
+            }
+
         });
 
 
-        document.getElementById("riskLevel").textContent=level;
+        let riskElement =
+            document.getElementById(
+                "riskLevel"
+            );
 
-        riskClass(
-            document.getElementById("riskLevel"),
-            level
+        if (riskElement) {
+
+            riskElement.textContent =
+                level;
+
+            riskClass(
+                riskElement,
+                level
+            );
+
+        }
+
+
+        [
+            "dEntered",
+            "anEntered",
+            "rEntered",
+            "sEntered"
+        ].forEach(id => {
+
+            let el =
+                document.getElementById(
+                    id
+                );
+
+            if (el) {
+                el.textContent =
+                    entered;
+            }
+
+        });
+
+
+        [
+            "dExited",
+            "anExited",
+            "rExited",
+            "sExited"
+        ].forEach(id => {
+
+            let el =
+                document.getElementById(
+                    id
+                );
+
+            if (el) {
+                el.textContent =
+                    exited;
+            }
+
+        });
+
+
+        [
+            "inference",
+            "aInference",
+            "anInference"
+        ].forEach(id => {
+
+            let el =
+                document.getElementById(
+                    id
+                );
+
+            if (el) {
+
+                el.textContent =
+                    inf.toFixed(1) +
+                    " ms";
+
+            }
+
+        });
+
+
+        [
+            "anRisk",
+            "rRisk",
+            "sRisk"
+        ].forEach(id => {
+
+            let el =
+                document.getElementById(
+                    id
+                );
+
+            if (el) {
+                el.textContent =
+                    level;
+            }
+
+        });
+
+
+        let yolo =
+            document.getElementById(
+                "yolo"
+            );
+
+        if (yolo) {
+
+            yolo.textContent =
+                d.yolo
+                    ? "READY"
+                    : "ERROR";
+
+            yolo.className =
+                d.yolo
+                    ? "ok"
+                    : "critical";
+
+        }
+
+
+        let camera =
+            document.getElementById(
+                "camera"
+            );
+
+        if (camera) {
+
+            camera.textContent =
+                d.camera
+                    ? "ONLINE"
+                    : "WAITING";
+
+            camera.className =
+                d.camera
+                    ? "ok"
+                    : "warn";
+
+        }
+
+
+        let camStatus =
+            document.getElementById(
+                "camStatus"
+            );
+
+        if (camStatus) {
+
+            camStatus.textContent =
+                d.camera
+                    ? "ONLINE"
+                    : "WAITING";
+
+            camStatus.className =
+                d.camera
+                    ? "ok"
+                    : "warn";
+
+        }
+
+
+        history.push(
+            people + objects
         );
 
-
-        document.getElementById("dEntered").textContent=entered;
-        document.getElementById("dExited").textContent=exited;
-
-        document.getElementById("anEntered").textContent=entered;
-        document.getElementById("anExited").textContent=exited;
-
-        document.getElementById("rEntered").textContent=entered;
-        document.getElementById("rExited").textContent=exited;
-
-        document.getElementById("sEntered").textContent=entered;
-        document.getElementById("sExited").textContent=exited;
-
-
-        document.getElementById("inference").textContent=
-            inf.toFixed(1)+" ms";
-
-        document.getElementById("aInference").textContent=
-            inf.toFixed(1)+" ms";
-
-        document.getElementById("anInference").textContent=
-            inf.toFixed(1)+" ms";
-
-
-        document.getElementById("anRisk").textContent=level;
-        document.getElementById("rRisk").textContent=level;
-        document.getElementById("sRisk").textContent=level;
-
-
-        document.getElementById("yolo").textContent=
-            d.yolo?"READY":"ERROR";
-
-        document.getElementById("yolo").className=
-            d.yolo?"ok":"critical";
-
-
-        document.getElementById("camera").textContent=
-            d.camera?"ONLINE":"OFFLINE";
-
-        document.getElementById("camera").className=
-            d.camera?"ok":"critical";
-
-
-        document.getElementById("camStatus").textContent=
-            d.camera?"ONLINE":"OFFLINE";
-
-        document.getElementById("camStatus").className=
-            d.camera?"ok":"critical";
-
-
-        history.push(people+objects);
-
-        if(history.length>30){
+        if (history.length > 30) {
             history.shift();
         }
 
         drawChart();
 
 
-        if(
-            lastRisk!==level &&
+        if (
+            lastRisk !== level &&
             (
-                level==="HIGH" ||
-                level==="CRITICAL"
+                level === "HIGH" ||
+                level === "CRITICAL"
             ) &&
             document
-                .getElementById("alertToggle")
-                .classList
+                .getElementById(
+                    "alertToggle"
+                )
+                ?.classList
                 .contains("on")
-        ){
+        ) {
 
             notify(level);
 
         }
 
-        lastRisk=level;
+        lastRisk = level;
 
 
-        document.getElementById("system").textContent=
-            "● SYSTEM ONLINE";
+        let system =
+            document.getElementById(
+                "system"
+            );
 
-        document.getElementById("system").className=
-            "system";
+        if (system) {
 
+            system.textContent =
+                d.camera
+                    ? "● SYSTEM ONLINE"
+                    : "● WAITING FOR CAMERA";
 
-    }catch(e){
+            system.className =
+                d.camera
+                    ? "system"
+                    : "system warning";
 
-        document.getElementById("system").textContent=
-            "● SYSTEM WARNING";
+        }
 
-        document.getElementById("system").className=
-            "system warning";
+    } catch (e) {
+
+        let system =
+            document.getElementById(
+                "system"
+            );
+
+        if (system) {
+
+            system.textContent =
+                "● SYSTEM WARNING";
+
+            system.className =
+                "system warning";
+
+        }
 
     }
 
 }
 
 
-async function loadIncidents(){
+async function loadIncidents() {
 
-    try{
+    try {
 
-        let r=await fetch(
-            "/api/incidents",
-            {
-                cache:"no-store"
+        let r =
+            await fetch(
+                "/api/incidents",
+                {
+                    cache:
+                        "no-store"
+                }
+            );
+
+        let d =
+            await r.json();
+
+        incidents =
+            d.incidents || [];
+
+        [
+            "anIncidents",
+            "rIncidents",
+            "sIncidents"
+        ].forEach(id => {
+
+            let el =
+                document.getElementById(
+                    id
+                );
+
+            if (el) {
+
+                el.textContent =
+                    incidents.length;
+
             }
-        );
 
-        let d=await r.json();
-
-        incidents=d.incidents||[];
-
-        document.getElementById("anIncidents").textContent=
-            incidents.length;
-
-        document.getElementById("rIncidents").textContent=
-            incidents.length;
-
-        document.getElementById("sIncidents").textContent=
-            incidents.length;
+        });
 
         renderIncidents();
 
         renderRecent();
 
-    }catch(e){}
+    } catch (e) {
+
+    }
 
 }
 
 
-function renderIncidents(){
+function renderIncidents() {
 
-    let q=(
-        document.getElementById("incidentSearch")?.value||""
-    ).toLowerCase();
+    let q =
+        (
+            document.getElementById(
+                "incidentSearch"
+            )?.value || ""
+        ).toLowerCase();
 
-    let f=
-        document.getElementById("severityFilter")?.value||"";
-
-
-    let a=incidents.filter(x=>
-
-        (!f || x.severity===f) &&
-
-        JSON.stringify(x)
-            .toLowerCase()
-            .includes(q)
-
-    );
+    let f =
+        document.getElementById(
+            "severityFilter"
+        )?.value || "";
 
 
-    let box=document.getElementById("incidentList");
+    let a =
+        incidents.filter(x =>
 
-    if(!box){
+            (!f ||
+                x.severity === f) &&
+
+            JSON.stringify(x)
+                .toLowerCase()
+                .includes(q)
+
+        );
+
+
+    let box =
+        document.getElementById(
+            "incidentList"
+        );
+
+    if (!box) {
         return;
     }
 
 
-    if(!a.length){
+    if (!a.length) {
 
-        box.innerHTML=
+        box.innerHTML =
             '<div class="empty">No incidents found.</div>';
 
         return;
@@ -1599,184 +2562,240 @@ function renderIncidents(){
     }
 
 
-    box.innerHTML=a.map(x=>{
+    box.innerHTML =
+        a.map(x => {
 
-        let s=(x.severity||"LOW").toLowerCase();
+            let s =
+                (
+                    x.severity ||
+                    "LOW"
+                ).toLowerCase();
 
-        return `
+            return `
 
-        <div class="incident">
+            <div class="incident">
 
-            <div class="incident-top">
+                <div class="incident-top">
 
-                <b>
-                    ${safe(x.type||"Security Event")}
-                </b>
+                    <b>
+                        ${safe(
+                            x.type ||
+                            "Security Event"
+                        )}
+                    </b>
 
-                <span class="badge b-${s}">
-                    ${safe(x.severity||"LOW")}
-                </span>
+                    <span class="badge b-${s}">
+                        ${safe(
+                            x.severity ||
+                            "LOW"
+                        )}
+                    </span>
+
+                </div>
+
+                <p>
+                    ${safe(
+                        x.reason ||
+                        "Security event detected"
+                    )}
+                </p>
+
+                <p>
+                    Tracking ID:
+                    ${safe(
+                        x.trackingId ??
+                        "-"
+                    )}
+
+                    &nbsp;
+
+                    Confidence:
+                    ${safe(
+                        x.confidence ??
+                        "-"
+                    )}%
+                </p>
+
+                <p>
+                    Camera:
+                    ${safe(
+                        x.camera ||
+                        "Browser Webcam"
+                    )}
+
+                    &nbsp;
+
+                    Time:
+                    ${safe(
+                        x.timestamp ||
+                        "-"
+                    )}
+                </p>
 
             </div>
 
-            <p>
-                ${safe(
-                    x.reason||
-                    "Security event detected"
-                )}
-            </p>
+            `;
 
-            <p>
-                Tracking ID:
-                ${safe(x.trackingId??"-")}
-
-                &nbsp;
-
-                Confidence:
-                ${safe(x.confidence??"-")}%
-            </p>
-
-            <p>
-                Camera:
-                ${safe(x.camera||"Laptop Webcam")}
-
-                &nbsp;
-
-                Time:
-                ${safe(x.timestamp||"-")}
-            </p>
-
-        </div>
-
-        `;
-
-    }).join("");
+        }).join("");
 
 }
 
 
-function renderRecent(){
+function renderRecent() {
 
-    let box=document.getElementById("recent");
+    let box =
+        document.getElementById(
+            "recent"
+        );
 
-    if(!box){
+    if (!box) {
         return;
     }
 
 
-    let a=incidents.slice(0,4);
+    let a =
+        incidents.slice(
+            0,
+            4
+        );
 
 
-    box.innerHTML=a.length
+    box.innerHTML =
+        a.length
 
-        ?
+            ?
 
-        a.map(x=>`
+            a.map(x => `
 
-        <div class="incident">
+            <div class="incident">
 
-            <div class="incident-top">
+                <div class="incident-top">
 
-                <b>
+                    <b>
+                        ${safe(
+                            x.type ||
+                            "Security Event"
+                        )}
+                    </b>
+
+                    <span>
+                        ${safe(
+                            x.severity ||
+                            "LOW"
+                        )}
+                    </span>
+
+                </div>
+
+                <p>
                     ${safe(
-                        x.type||
-                        "Security Event"
+                        x.timestamp ||
+                        ""
                     )}
-                </b>
-
-                <span>
-                    ${safe(
-                        x.severity||
-                        "LOW"
-                    )}
-                </span>
+                </p>
 
             </div>
 
-            <p>
-                ${safe(x.timestamp||"")}
-            </p>
+            `).join("")
 
-        </div>
+            :
 
-        `).join("")
-
-        :
-
-        '<div class="empty">No incidents yet.</div>';
+            '<div class="empty">No incidents yet.</div>';
 
 }
 
 
-function safe(v){
+function safe(v) {
 
     return String(v)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
 
 }
 
 
-function drawChart(){
+function drawChart() {
 
-    let c=document.getElementById("chart");
+    let c =
+        document.getElementById(
+            "chart"
+        );
 
-    if(!c){
+    if (!c) {
         return;
     }
 
 
-    let m=Math.max(
-        ...history,
-        1
-    );
+    let m =
+        Math.max(
+            ...history,
+            1
+        );
 
 
-    c.innerHTML=history.map(v=>`
+    c.innerHTML =
+        history.map(v => `
 
         <div
             class="bar"
             style="height:${Math.max(
                 5,
-                v/m*100
+                v / m * 100
             )}%"
         >
             <span>${v}</span>
         </div>
 
-    `).join("");
+        `).join("");
 
 }
 
 
-function notify(level){
+function notify(level) {
 
-    if(!("Notification" in window)){
+    if (!("Notification" in window)) {
         return;
     }
 
 
-    if(
-        Notification.permission==="default"
-    ){
+    if (
+        Notification.permission ===
+        "default"
+    ) {
 
         Notification.requestPermission();
 
     }
 
 
-    if(
-        Notification.permission==="granted"
-    ){
+    if (
+        Notification.permission ===
+        "granted"
+    ) {
 
         new Notification(
             "VisionGuard Security Alert",
             {
                 body:
-                    "Risk level is now "+
+                    "Risk level is now " +
                     level
             }
         );
@@ -1786,9 +2805,10 @@ function notify(level){
 }
 
 
-function exportCSV(){
+function exportCSV() {
 
-    let rows=[
+    let rows = [
+
         [
             "ID",
             "Type",
@@ -1798,10 +2818,11 @@ function exportCSV(){
             "Camera",
             "Timestamp"
         ]
+
     ];
 
 
-    incidents.forEach(x=>{
+    incidents.forEach(x => {
 
         rows.push([
 
@@ -1818,33 +2839,38 @@ function exportCSV(){
     });
 
 
-    let csv=rows
-        .map(r=>
-            r.map(v=>
-                `"${String(
-                    v??""
-                ).replaceAll(
-                    '"',
-                    '""'
-                )}"`
-            ).join(",")
-        )
-        .join("\n");
+    let csv =
+        rows
+            .map(r =>
+                r.map(v =>
+                    `"${String(
+                        v ?? ""
+                    ).replaceAll(
+                        '"',
+                        '""'
+                    )}"`
+                ).join(",")
+            )
+            .join("\n");
 
 
-    let a=document.createElement("a");
+    let a =
+        document.createElement(
+            "a"
+        );
 
-    a.href=
+    a.href =
         URL.createObjectURL(
             new Blob(
                 [csv],
                 {
-                    type:"text/csv"
+                    type:
+                        "text/csv"
                 }
             )
         );
 
-    a.download=
+    a.download =
         "visionguard_incidents.csv";
 
     a.click();
@@ -1852,78 +2878,82 @@ function exportCSV(){
 }
 
 
-function downloadReport(){
+function downloadReport() {
 
-    let text=
+    let text =
 
-        "VISIONGUARD SECURITY REPORT\n\n"+
+        "VISIONGUARD SECURITY REPORT\n\n" +
 
-        "Generated: "+
-        new Date().toLocaleString()+
-        "\n\n"+
+        "Generated: " +
+        new Date().toLocaleString() +
+        "\n\n" +
 
-        "People: "+
+        "People: " +
         document.getElementById(
             "people"
-        ).textContent+
+        ).textContent +
 
-        "\nObjects: "+
+        "\nObjects: " +
         document.getElementById(
             "objects"
-        ).textContent+
+        ).textContent +
 
-        "\nRisk: "+
+        "\nRisk: " +
         document.getElementById(
             "risk"
-        ).textContent+
-        " - "+
+        ).textContent +
+        " - " +
         document.getElementById(
             "riskLevel"
-        ).textContent+
+        ).textContent +
 
-        "\nFPS: "+
+        "\nFPS: " +
         document.getElementById(
             "fps"
-        ).textContent+
+        ).textContent +
 
-        "\nEntries: "+
+        "\nEntries: " +
         document.getElementById(
             "dEntered"
-        ).textContent+
+        ).textContent +
 
-        "\nExits: "+
+        "\nExits: " +
         document.getElementById(
             "dExited"
-        ).textContent+
+        ).textContent +
 
-        "\nIncidents: "+
-        incidents.length+
+        "\nIncidents: " +
+        incidents.length +
 
-        "\n\nINCIDENTS\n"+
+        "\n\nINCIDENTS\n" +
 
         incidents
-            .map(x=>
-                `${x.timestamp||""} | `+
-                `${x.severity||""} | `+
-                `${x.type||""} | `+
-                `ID ${x.trackingId??"-"}`
+            .map(x =>
+                `${x.timestamp || ""} | ` +
+                `${x.severity || ""} | ` +
+                `${x.type || ""} | ` +
+                `ID ${x.trackingId ?? "-"}`
             )
             .join("\n");
 
 
-    let a=document.createElement("a");
+    let a =
+        document.createElement(
+            "a"
+        );
 
-    a.href=
+    a.href =
         URL.createObjectURL(
             new Blob(
                 [text],
                 {
-                    type:"text/plain"
+                    type:
+                        "text/plain"
                 }
             )
         );
 
-    a.download=
+    a.download =
         "visionguard_security_report.txt";
 
     a.click();
