@@ -3,4 +3,4 @@ flask-cors
 opencv-python
 numpy
 ultralytics
-requests
+requestsgunicorn
