@@ -687,7 +687,7 @@ button{
 
         <img
             id="aiFeed"
-            src="/video_feed"
+            src="https://visionguard-4.onrender.com/video_feed"
             alt="AI detection output"
         >
 
@@ -798,7 +798,7 @@ button{
         </div>
 
         <img
-            src="/video_feed"
+            src="https://visionguard-4.onrender.com/video_feed"
             alt="YOLO detection"
         >
 
@@ -982,6 +982,8 @@ button{
 </main>
 
 <script>
+
+const API_BASE = "https://visionguard-4.onrender.com";
 
 let webcamStream = null;
 let sendingFrame = false;
@@ -1315,7 +1317,7 @@ async function sendFrame(){
 
         const response =
             await fetch(
-                "/api/frame",
+                API_BASE + "/api/frame",
                 {
                     method:"POST",
                     headers:{
@@ -1513,7 +1515,7 @@ async function updateStatus(){
 
         const response =
             await fetch(
-                "/api/status",
+                API_BASE + "/api/status",
                 {
                     cache:"no-store"
                 }
@@ -1594,7 +1596,7 @@ async function loadIncidents(){
 
         const response =
             await fetch(
-                "/api/incidents",
+                API_BASE + "/api/incidents",
                 {
                     cache:"no-store"
                 }
