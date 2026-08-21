@@ -906,11 +906,11 @@ def generate_video():
         yield (
             b"--frame\r\n"
             b"Content-Type: image/jpeg\r\n\r\n"
-            +
-            frame
-            +
-            b"\r\n"
+            + frame
+            + b"\r\n"
         )
+
+        time.sleep(0.03)
 
 
 @app.route("/")
