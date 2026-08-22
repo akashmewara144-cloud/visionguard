@@ -19,6 +19,10 @@ body{
     min-height:100vh
 }
 
+button,input,select{
+    font:inherit
+}
+
 button{
     cursor:pointer
 }
@@ -27,7 +31,7 @@ button{
     position:fixed;
     left:0;
     top:0;
-    width:220px;
+    width:225px;
     height:100vh;
     background:#0c1527;
     border-right:1px solid #22314b;
@@ -58,8 +62,7 @@ button{
     color:#aebbd0;
     text-align:left;
     padding:13px 14px;
-    border-radius:8px;
-    font-size:13px
+    border-radius:8px
 }
 
 .nav button:hover,
@@ -69,7 +72,7 @@ button{
 }
 
 .main{
-    margin-left:220px;
+    margin-left:225px;
     min-height:100vh
 }
 
@@ -152,22 +155,6 @@ button{
     margin-top:5px
 }
 
-.ok{
-    color:#34d399
-}
-
-.warn{
-    color:#fbbf24
-}
-
-.high{
-    color:#fb923c
-}
-
-.critical{
-    color:#ff4d4d
-}
-
 .grid{
     display:grid;
     grid-template-columns:minmax(0,2fr) minmax(270px,1fr);
@@ -182,52 +169,6 @@ button{
 .panel h2{
     font-size:17px;
     margin-bottom:15px
-}
-
-.actions{
-    display:flex;
-    gap:9px;
-    flex-wrap:wrap;
-    margin-bottom:15px
-}
-
-.btn{
-    border:0;
-    background:#0891b2;
-    color:#fff;
-    padding:10px 14px;
-    border-radius:7px;
-    font-size:12px;
-    font-weight:600
-}
-
-.btn.danger{
-    background:#7f1d1d
-}
-
-.btn.secondary{
-    background:#26344a
-}
-
-.notice{
-    background:#0b1425;
-    border:1px solid #22314b;
-    border-radius:7px;
-    padding:13px;
-    color:#94a3b8;
-    font-size:12px;
-    margin-bottom:12px
-}
-
-.browser-preview{
-    width:100%;
-    display:block;
-    background:#000;
-    border-radius:8px;
-    min-height:300px;
-    max-height:430px;
-    object-fit:contain;
-    transform:scaleX(-1)
 }
 
 .video{
@@ -258,6 +199,43 @@ button{
     z-index:2
 }
 
+.rows{
+    display:flex;
+    flex-direction:column
+}
+
+.row{
+    display:flex;
+    justify-content:space-between;
+    padding:12px 0;
+    border-bottom:1px solid #1d2a41;
+    font-size:13px
+}
+
+.row:last-child{
+    border:0
+}
+
+.label{
+    color:#8c9ab0
+}
+
+.ok{
+    color:#34d399
+}
+
+.warn{
+    color:#fbbf24
+}
+
+.high{
+    color:#fb923c
+}
+
+.critical{
+    color:#ff4d4d
+}
+
 .stats{
     display:grid;
     grid-template-columns:repeat(4,1fr);
@@ -283,25 +261,56 @@ button{
     color:#8290a6
 }
 
-.rows{
+.info{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px
+}
+
+.info div{
+    background:#0b1425;
+    padding:15px;
+    border-radius:7px
+}
+
+.info span{
+    display:block;
+    color:#77869e;
+    font-size:10px;
+    margin-bottom:6px
+}
+
+.info b{
+    font-size:14px
+}
+
+.actions{
     display:flex;
-    flex-direction:column
+    gap:9px;
+    flex-wrap:wrap;
+    margin-bottom:15px
 }
 
-.row{
-    display:flex;
-    justify-content:space-between;
-    padding:12px 0;
-    border-bottom:1px solid #1d2a41;
-    font-size:13px
+.btn{
+    border:0;
+    background:#0891b2;
+    color:#fff;
+    padding:9px 14px;
+    border-radius:7px;
+    font-size:12px;
+    font-weight:600
 }
 
-.row:last-child{
-    border:0
+.btn:hover{
+    opacity:.9
 }
 
-.label{
-    color:#8c9ab0
+.btn.secondary{
+    background:#26344a
+}
+
+.btn.danger{
+    background:#7f1d1d
 }
 
 .incident{
@@ -349,6 +358,112 @@ button{
     color:#8b99ae;
     font-size:11px;
     margin-top:6px
+}
+
+.filters{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap
+}
+
+.filters input,
+.filters select,
+.actions input,
+.actions select{
+    background:#0b1425;
+    border:1px solid #2a3a53;
+    color:#dbe5f3;
+    border-radius:6px;
+    padding:9px;
+    font-size:12px
+}
+
+.chart{
+    height:190px;
+    background:#0b1425;
+    border-radius:8px;
+    padding:12px;
+    display:flex;
+    align-items:end;
+    gap:5px;
+    overflow:hidden
+}
+
+.bar{
+    flex:1;
+    min-width:7px;
+    background:#0ea5c6;
+    border-radius:3px 3px 0 0;
+    position:relative
+}
+
+.bar span{
+    position:absolute;
+    bottom:100%;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:8px;
+    color:#8fa0b8;
+    margin-bottom:3px
+}
+
+.setting{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#0b1425;
+    padding:14px;
+    border-radius:7px;
+    margin-bottom:9px
+}
+
+.setting strong{
+    font-size:13px
+}
+
+.setting span{
+    display:block;
+    color:#71809a;
+    font-size:10px;
+    margin-top:4px
+}
+
+.toggle{
+    width:45px;
+    height:23px;
+    background:#334155;
+    border-radius:20px;
+    position:relative
+}
+
+.toggle:after{
+    content:"";
+    position:absolute;
+    width:17px;
+    height:17px;
+    top:3px;
+    left:4px;
+    background:#fff;
+    border-radius:50%;
+    transition:.2s
+}
+
+.toggle.on{
+    background:#0891b2
+}
+
+.toggle.on:after{
+    left:24px
+}
+
+.notice{
+    background:#0b1425;
+    border:1px solid #22314b;
+    border-radius:7px;
+    padding:13px;
+    color:#94a3b8;
+    font-size:12px;
+    margin-bottom:12px
 }
 
 .empty{
@@ -410,11 +525,24 @@ button{
     display:none
 }
 
-.hidden{
+.webcam-source{
     display:none
+}
+.browser-preview{
+    width:100%;
+    display:block;
+    background:#000;
+    border-radius:8px;
+    min-height:300px;
+    object-fit:contain;
+    transform:scaleX(-1)
+}
+.camera-preview-panel{
+    margin-top:12px;
 }
 
 @media(max-width:1050px){
+
     .cards{
         grid-template-columns:repeat(2,1fr)
     }
@@ -422,9 +550,11 @@ button{
     .grid{
         grid-template-columns:1fr
     }
+
 }
 
 @media(max-width:700px){
+
     .sidebar{
         width:65px
     }
@@ -457,6 +587,11 @@ button{
     .stats{
         grid-template-columns:repeat(2,1fr)
     }
+
+    .info{
+        grid-template-columns:1fr
+    }
+
 }
 </style>
 </head>
@@ -464,12 +599,16 @@ button{
 <body>
 
 <div class="login" id="login">
+
     <div class="loginbox">
+
         <h2>
             <span style="color:#20d4f4">Vision</span>Guard
         </h2>
 
-        <p>AI-Powered Smart Surveillance</p>
+        <p>
+            AI-Powered Smart Surveillance
+        </p>
 
         <input
             id="email"
@@ -484,27 +623,35 @@ button{
             placeholder="Password"
         >
 
-        <button class="btn" onclick="loginUser()">
+        <button
+            class="btn"
+            onclick="loginUser()"
+        >
             Sign In
         </button>
 
-        <div id="loginError" class="error">
+        <div
+            id="loginError"
+            class="error"
+        >
             Invalid credentials
         </div>
+
     </div>
+
 </div>
 
 <video
     id="webcam"
+    class="webcam-source"
     autoplay
     playsinline
     muted
-    style="display:none"
 ></video>
 
 <canvas
     id="captureCanvas"
-    style="display:none"
+    class="webcam-source"
 ></canvas>
 
 <aside class="sidebar">
@@ -522,39 +669,56 @@ button{
             ▦ Dashboard
         </button>
 
-        <button onclick="page('detection',this)">
+        <button
+            onclick="page('detection',this)"
+        >
             ◉ AI Detection
         </button>
 
-        <button onclick="page('cameras',this)">
+        <button
+            onclick="page('cameras',this)"
+        >
             ◉ Cameras
         </button>
 
-        <button onclick="page('incidents',this)">
+        <button
+            onclick="page('incidents',this)"
+        >
             ⚠ Incidents
         </button>
 
-        <button onclick="page('analytics',this)">
+        <button
+            onclick="page('analytics',this)"
+        >
             ◈ Analytics
         </button>
 
-        <button onclick="page('reports',this)">
+        <button
+            onclick="page('reports',this)"
+        >
             ▤ Reports
         </button>
 
-        <button onclick="page('security',this)">
+        <button
+            onclick="page('security',this)"
+        >
             ◇ Security
         </button>
 
-        <button onclick="page('settings',this)">
+        <button
+            onclick="page('settings',this)"
+        >
             ⚙ Settings
         </button>
 
-        <button onclick="logout()">
+        <button
+            onclick="logout()"
+        >
             ↪ Sign Out
         </button>
 
     </nav>
+
 </aside>
 
 <main class="main">
@@ -576,33 +740,91 @@ button{
 
 <div class="content">
 
-<section id="dashboard" class="page active">
+<section
+    id="dashboard"
+    class="page active"
+>
 
 <div class="cards">
 
-    <div class="card">
-        <div class="card-title">People Detected</div>
-        <div id="people" class="value">0</div>
-        <div class="small">Current frame</div>
+<div class="card">
+
+    <div class="card-title">
+        People Detected
     </div>
 
-    <div class="card">
-        <div class="card-title">Objects</div>
-        <div id="objects" class="value">0</div>
-        <div class="small">YOLO detections</div>
+    <div
+        id="people"
+        class="value"
+    >
+        0
     </div>
 
-    <div class="card">
-        <div class="card-title">Risk Score</div>
-        <div id="risk" class="value">5</div>
-        <div id="riskLevel" class="small ok">LOW</div>
+    <div class="small">
+        Current frame
     </div>
 
-    <div class="card">
-        <div class="card-title">FPS</div>
-        <div id="fps" class="value">0</div>
-        <div class="small">Processing speed</div>
+</div>
+
+<div class="card">
+
+    <div class="card-title">
+        Objects
     </div>
+
+    <div
+        id="objects"
+        class="value"
+    >
+        0
+    </div>
+
+    <div class="small">
+        YOLO detections
+    </div>
+
+</div>
+
+<div class="card">
+
+    <div class="card-title">
+        Risk Score
+    </div>
+
+    <div
+        id="risk"
+        class="value"
+    >
+        0
+    </div>
+
+    <div
+        id="riskLevel"
+        class="small ok"
+    >
+        LOW
+    </div>
+
+</div>
+
+<div class="card">
+
+    <div class="card-title">
+        FPS
+    </div>
+
+    <div
+        id="fps"
+        class="value"
+    >
+        0
+    </div>
+
+    <div class="small">
+        Processing speed
+    </div>
+
+</div>
 
 </div>
 
@@ -610,7 +832,9 @@ button{
 
 <div class="panel">
 
-    <h2>Live Surveillance</h2>
+    <h2>
+        Live Surveillance
+    </h2>
 
     <div class="actions">
 
@@ -638,58 +862,32 @@ button{
     </div>
 
     <div class="notice">
-        Browser webcam frames are sent to the VisionGuard
-        server for YOLOv8 analysis.
+        Allow camera permission when the browser asks.
+        The browser camera is captured and sent to VisionGuard
+        for YOLOv8 analysis. The processed result appears below.
     </div>
 
-    <div class="notice">
-        <b style="color:#e8eef8">
-            Browser Camera Preview
-        </b>
-
-        <span
-            id="previewStatus"
-            style="float:right"
-        >
-            OFF
-        </span>
+    <div class="camera-preview-panel">
+        <div class="notice" style="margin-bottom:8px">
+            <b style="color:#e8eef8">Browser Camera Preview</b>
+            <span id="previewStatus" style="float:right">OFF</span>
+        </div>
+        <video id="webcamPreview" class="browser-preview"
+               autoplay playsinline muted></video>
     </div>
 
-    <video
-        id="webcamPreview"
-        class="browser-preview"
-        autoplay
-        playsinline
-        muted
-    ></video>
-
-    <div
-        class="notice"
-        style="margin-top:12px"
-    >
-        <b style="color:#e8eef8">
-            AI Detection Output
-        </b>
-
-        <span
-            id="aiFeedStatus"
-            style="float:right"
-        >
-            WAITING
-        </span>
+    <div class="notice" style="margin-top:12px">
+        <b style="color:#e8eef8">AI Detection Output</b>
+        <span id="aiFeedStatus" style="float:right">WAITING</span>
     </div>
 
     <div class="video">
 
         <div class="live">
-            ● AI LIVE
+            ● LIVE
         </div>
 
-        <img
-            id="aiFeed"
-            src="https://visionguard-4.onrender.com/video_feed"
-            alt="AI detection output"
-        >
+        <img id="aiFeed" src="" alt="Live surveillance">
 
     </div>
 
@@ -723,39 +921,74 @@ button{
 
 <div class="panel">
 
-    <h2>AI System Status</h2>
+    <h2>
+        AI System Status
+    </h2>
 
     <div class="rows">
 
         <div class="row">
-            <span class="label">YOLOv8</span>
-            <b id="yolo" class="ok">
-                CHECKING
+            <span class="label">
+                YOLOv8
+            </span>
+
+            <b
+                id="yolo"
+                class="ok"
+            >
+                READY
             </b>
         </div>
 
         <div class="row">
-            <span class="label">Webcam</span>
-            <b id="camera" class="warn">
+
+            <span class="label">
+                Webcam
+            </span>
+
+            <b
+                id="camera"
+                class="warn"
+            >
                 WAITING
             </b>
+
         </div>
 
         <div class="row">
-            <span class="label">Inference</span>
+
+            <span class="label">
+                Tracker
+            </span>
+
+            <b class="ok">
+                ByteTrack
+            </b>
+
+        </div>
+
+        <div class="row">
+
+            <span class="label">
+                Inference
+            </span>
+
             <b id="inference">
                 0 ms
             </b>
+
         </div>
 
         <div class="row">
-            <span class="label">Model</span>
-            <b>YOLOv8n</b>
-        </div>
 
-        <div class="row">
-            <span class="label">Mode</span>
-            <b>Low Memory</b>
+            <span class="label">
+                Model
+            </span>
+
+            <b>
+                YOLOv8n
+            </b>
+
         </div>
 
     </div>
@@ -764,13 +997,11 @@ button{
 
 <div class="panel">
 
-    <h2>Recent Incidents</h2>
+    <h2>
+        Recent Incidents
+    </h2>
 
-    <div id="recentIncidents">
-        <div class="empty">
-            No incidents yet.
-        </div>
-    </div>
+    <div id="recent"></div>
 
 </div>
 
@@ -780,15 +1011,34 @@ button{
 
 </section>
 
-<section id="detection" class="page">
+
+<section
+    id="detection"
+    class="page"
+>
 
 <div class="panel">
 
-    <h2>AI Detection</h2>
+    <h2>
+        Real-Time YOLOv8 Detection
+    </h2>
 
-    <div class="notice">
-        YOLOv8n performs CPU inference on browser webcam frames.
-        Low-memory mode is enabled for Render Free.
+    <div class="actions">
+
+        <button
+            class="btn"
+            onclick="startWebcam()"
+        >
+            📷 Enable My Webcam
+        </button>
+
+        <button
+            class="btn danger"
+            onclick="stopWebcam()"
+        >
+            Stop Webcam
+        </button>
+
     </div>
 
     <div class="video">
@@ -797,10 +1047,63 @@ button{
             ● AI LIVE
         </div>
 
-        <img
-            src="https://visionguard-4.onrender.com/video_feed"
-            alt="YOLO detection"
-        >
+        <img id="aiFeed2" src="" alt="YOLO detection">
+
+    </div>
+
+    <div class="stats">
+
+        <div class="stat">
+            <b id="aPeople">0</b>
+            <span>PEOPLE</span>
+        </div>
+
+        <div class="stat">
+            <b id="aObjects">0</b>
+            <span>OBJECTS</span>
+        </div>
+
+        <div class="stat">
+            <b id="aFPS">0</b>
+            <span>FPS</span>
+        </div>
+
+        <div class="stat">
+            <b id="aRisk">0</b>
+            <span>RISK</span>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="panel">
+
+    <h2>
+        Detection Engine
+    </h2>
+
+    <div class="info">
+
+        <div>
+            <span>MODEL</span>
+            <b>YOLOv8n</b>
+        </div>
+
+        <div>
+            <span>TRACKER</span>
+            <b>ByteTrack</b>
+        </div>
+
+        <div>
+            <span>INFERENCE</span>
+            <b id="aInference">0 ms</b>
+        </div>
+
+        <div>
+            <span>CAMERA</span>
+            <b>Browser Webcam</b>
+        </div>
 
     </div>
 
@@ -808,142 +1111,271 @@ button{
 
 </section>
 
-<section id="cameras" class="page">
+
+<section
+    id="cameras"
+    class="page"
+>
 
 <div class="panel">
 
-    <h2>Camera Management</h2>
+    <h2>
+        Camera Management
+    </h2>
 
     <div class="notice">
-        Active source: visitor browser webcam.
+        The active camera is the visitor's browser webcam.
+        The browser securely captures the camera stream
+        and sends frames to the VisionGuard AI backend.
     </div>
 
-    <button
-        class="btn"
-        onclick="startWebcam()"
-    >
-        Enable Webcam
-    </button>
+    <div class="actions">
 
-    <button
-        class="btn danger"
-        onclick="stopWebcam()"
-    >
-        Stop Webcam
-    </button>
+        <button
+            class="btn"
+            onclick="startWebcam()"
+        >
+            📷 Enable Webcam
+        </button>
 
-</div>
-
-</section>
-
-<section id="incidents" class="page">
-
-<div class="panel">
-
-    <h2>Security Incidents</h2>
-
-    <div id="allIncidents">
-        <div class="empty">
-            No incidents yet.
-        </div>
-    </div>
-
-</div>
-
-</section>
-
-<section id="analytics" class="page">
-
-<div class="panel">
-
-    <h2>Security Analytics</h2>
-
-    <div class="cards">
-
-        <div class="card">
-            <div class="card-title">People</div>
-            <div id="anPeople" class="value">0</div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">Objects</div>
-            <div id="anObjects" class="value">0</div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">FPS</div>
-            <div id="anFPS" class="value">0</div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">Risk</div>
-            <div id="anRisk" class="value">5</div>
-        </div>
+        <button
+            class="btn danger"
+            onclick="stopWebcam()"
+        >
+            Stop Webcam
+        </button>
 
     </div>
 
-</div>
+    <div class="info">
 
-</section>
-
-<section id="reports" class="page">
-
-<div class="panel">
-
-    <h2>Security Reports</h2>
-
-    <button
-        class="btn"
-        onclick="loadIncidents()"
-    >
-        Refresh Report
-    </button>
-
-    <div
-        id="reportOutput"
-        class="notice"
-        style="margin-top:15px"
-    >
-        VisionGuard live security report.
-    </div>
-
-</div>
-
-</section>
-
-<section id="security" class="page">
-
-<div class="panel">
-
-    <h2>Security Monitoring</h2>
-
-    <div class="rows">
-
-        <div class="row">
-            <span class="label">
-                YOLO Engine
-            </span>
-            <b id="secYolo" class="ok">
-                READY
-            </b>
+        <div>
+            <span>CAMERA</span>
+            <b>Browser Webcam</b>
         </div>
 
-        <div class="row">
-            <span class="label">
-                Browser Camera
-            </span>
-            <b id="secCamera" class="warn">
+        <div>
+            <span>STATUS</span>
+            <b
+                id="camStatus"
+                class="warn"
+            >
                 WAITING
             </b>
         </div>
 
-        <div class="row">
-            <span class="label">
-                Detection Mode
-            </span>
-            <b>
-                CPU
-            </b>
+        <div>
+            <span>MODEL</span>
+            <b>YOLOv8n</b>
+        </div>
+
+        <div>
+            <span>TRACKER</span>
+            <b>ByteTrack</b>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="panel">
+
+    <h2>
+        Live AI Camera Output
+    </h2>
+
+    <div class="video">
+
+        <div class="live">
+            ● CAMERA LIVE
+        </div>
+
+        <img id="cameraFeed" src="" alt="Camera">
+
+    </div>
+
+</div>
+
+</section>
+
+
+<section
+    id="incidents"
+    class="page"
+>
+
+<div class="panel">
+
+    <h2>
+        Security Incidents
+    </h2>
+
+    <div class="actions">
+
+        <button
+            class="btn"
+            onclick="loadIncidents()"
+        >
+            Refresh
+        </button>
+
+        <button
+            class="btn secondary"
+            onclick="exportCSV()"
+        >
+            Export CSV
+        </button>
+
+        <input
+            id="incidentSearch"
+            placeholder="Search incidents..."
+            oninput="renderIncidents()"
+        >
+
+        <select
+            id="severityFilter"
+            onchange="renderIncidents()"
+        >
+
+            <option value="">
+                All severity
+            </option>
+
+            <option>
+                CRITICAL
+            </option>
+
+            <option>
+                HIGH
+            </option>
+
+            <option>
+                MEDIUM
+            </option>
+
+            <option>
+                LOW
+            </option>
+
+        </select>
+
+    </div>
+
+    <div id="incidentList"></div>
+
+</div>
+
+</section>
+
+
+<section
+    id="analytics"
+    class="page"
+>
+
+<div class="cards">
+
+<div class="card">
+
+    <div class="card-title">
+        Total Incidents
+    </div>
+
+    <div
+        id="anIncidents"
+        class="value"
+    >
+        0
+    </div>
+
+</div>
+
+<div class="card">
+
+    <div class="card-title">
+        Entries
+    </div>
+
+    <div
+        id="anEntered"
+        class="value"
+    >
+        0
+    </div>
+
+</div>
+
+<div class="card">
+
+    <div class="card-title">
+        Exits
+    </div>
+
+    <div
+        id="anExited"
+        class="value"
+    >
+        0
+    </div>
+
+</div>
+
+<div class="card">
+
+    <div class="card-title">
+        Current Risk
+    </div>
+
+    <div
+        id="anRisk"
+        class="value"
+    >
+        LOW
+    </div>
+
+</div>
+
+</div>
+
+<div class="panel">
+
+    <h2>
+        Live Activity Trend
+    </h2>
+
+    <div
+        id="chart"
+        class="chart"
+    ></div>
+
+</div>
+
+<div class="panel">
+
+    <h2>
+        Current Detection Metrics
+    </h2>
+
+    <div class="info">
+
+        <div>
+            <span>PEOPLE</span>
+            <b id="anPeople">0</b>
+        </div>
+
+        <div>
+            <span>OBJECTS</span>
+            <b id="anObjects">0</b>
+        </div>
+
+        <div>
+            <span>FPS</span>
+            <b id="anFPS">0</b>
+        </div>
+
+        <div>
+            <span>INFERENCE</span>
+            <b id="anInference">0 ms</b>
         </div>
 
     </div>
@@ -952,26 +1384,265 @@ button{
 
 </section>
 
-<section id="settings" class="page">
+
+<section
+    id="reports"
+    class="page"
+>
 
 <div class="panel">
 
-    <h2>System Settings</h2>
+    <h2>
+        Security Reports
+    </h2>
 
     <div class="notice">
-        YOLO model: YOLOv8n
+        Generate a local security summary from live
+        VisionGuard data and recorded incidents.
     </div>
 
-    <div class="notice">
-        Inference size: 320px
+    <div class="actions">
+
+        <button
+            class="btn"
+            onclick="downloadReport()"
+        >
+            Download Report
+        </button>
+
+        <button
+            class="btn secondary"
+            onclick="window.print()"
+        >
+            Print Report
+        </button>
+
     </div>
 
-    <div class="notice">
-        Frame processing interval: 350ms
+    <div class="info">
+
+        <div>
+            <span>PEOPLE CURRENTLY DETECTED</span>
+            <b id="rPeople">0</b>
+        </div>
+
+        <div>
+            <span>OBJECTS CURRENTLY DETECTED</span>
+            <b id="rObjects">0</b>
+        </div>
+
+        <div>
+            <span>ENTRIES</span>
+            <b id="rEntered">0</b>
+        </div>
+
+        <div>
+            <span>EXITS</span>
+            <b id="rExited">0</b>
+        </div>
+
+        <div>
+            <span>INCIDENTS</span>
+            <b id="rIncidents">0</b>
+        </div>
+
+        <div>
+            <span>RISK</span>
+            <b id="rRisk">LOW</b>
+        </div>
+
     </div>
 
-    <div class="notice">
-        Render memory optimization: ENABLED
+</div>
+
+</section>
+
+
+<section
+    id="security"
+    class="page"
+>
+
+<div class="panel">
+
+    <h2>
+        Security Monitoring
+    </h2>
+
+    <div class="info">
+
+        <div>
+            <span>RESTRICTED ZONE</span>
+            <b class="ok">ACTIVE</b>
+        </div>
+
+        <div>
+            <span>OBJECT TRACKING</span>
+            <b class="ok">ACTIVE</b>
+        </div>
+
+        <div>
+            <span>RISK ENGINE</span>
+            <b class="ok">ACTIVE</b>
+        </div>
+
+        <div>
+            <span>INCIDENT LOGGING</span>
+            <b class="ok">ACTIVE</b>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="panel">
+
+    <h2>
+        Live Security Metrics
+    </h2>
+
+    <div class="rows">
+
+        <div class="row">
+            <span class="label">People</span>
+            <b id="sPeople">0</b>
+        </div>
+
+        <div class="row">
+            <span class="label">Objects</span>
+            <b id="sObjects">0</b>
+        </div>
+
+        <div class="row">
+            <span class="label">Risk</span>
+            <b id="sRisk">LOW</b>
+        </div>
+
+        <div class="row">
+            <span class="label">Entered</span>
+            <b id="sEntered">0</b>
+        </div>
+
+        <div class="row">
+            <span class="label">Exited</span>
+            <b id="sExited">0</b>
+        </div>
+
+        <div class="row">
+            <span class="label">Incidents</span>
+            <b id="sIncidents">0</b>
+        </div>
+
+    </div>
+
+</div>
+
+</section>
+
+
+<section
+    id="settings"
+    class="page"
+>
+
+<div class="panel">
+
+    <h2>
+        System Settings
+    </h2>
+
+    <div class="setting">
+
+        <div>
+            <strong>AI Detection</strong>
+            <span>
+                YOLOv8 object detection interface
+            </span>
+        </div>
+
+        <div
+            class="toggle on"
+            onclick="this.classList.toggle('on')"
+        ></div>
+
+    </div>
+
+    <div class="setting">
+
+        <div>
+            <strong>Incident Monitoring</strong>
+            <span>
+                Security event monitoring
+            </span>
+        </div>
+
+        <div
+            class="toggle on"
+            onclick="this.classList.toggle('on')"
+        ></div>
+
+    </div>
+
+    <div class="setting">
+
+        <div>
+            <strong>Browser Alerts</strong>
+            <span>
+                Notify when risk becomes HIGH or CRITICAL
+            </span>
+        </div>
+
+        <div
+            id="alertToggle"
+            class="toggle on"
+            onclick="this.classList.toggle('on')"
+        ></div>
+
+    </div>
+
+    <div class="setting">
+
+        <div>
+            <strong>Auto Refresh</strong>
+            <span>
+                Live dashboard synchronization
+            </span>
+        </div>
+
+        <div class="toggle on"></div>
+
+    </div>
+
+</div>
+
+<div class="panel">
+
+    <h2>
+        System Information
+    </h2>
+
+    <div class="info">
+
+        <div>
+            <span>BACKEND</span>
+            <b>Flask</b>
+        </div>
+
+        <div>
+            <span>AI</span>
+            <b>Ultralytics YOLOv8</b>
+        </div>
+
+        <div>
+            <span>TRACKING</span>
+            <b>ByteTrack</b>
+        </div>
+
+        <div>
+            <span>CAMERA</span>
+            <b>Browser Webcam</b>
+        </div>
+
     </div>
 
 </div>
@@ -979,274 +1650,377 @@ button{
 </section>
 
 </div>
+
 </main>
+
 
 <script>
 
-const API_BASE = "https://visionguard-4.onrender.com";
+let incidents = [];
+let history = [];
+let lastRisk = "LOW";
 
 let webcamStream = null;
+let webcamTimer = null;
 let sendingFrame = false;
-let frameTimer = null;
 
-function loginUser(){
+let logged =
+    localStorage.getItem("vg_login");
 
-    const email =
-        document.getElementById("email").value;
+if (logged === "true") {
 
-    const password =
-        document.getElementById("password").value;
+    document.getElementById(
+        "login"
+    ).style.display = "none";
 
-    if(
-        email === "admin@visionguard.local" &&
-        password === "admin123"
-    ){
+}
+
+
+function loginUser() {
+
+    let e =
+        document.getElementById(
+            "email"
+        ).value.trim();
+
+    let p =
+        document.getElementById(
+            "password"
+        ).value;
+
+    if (
+        e === "admin@visionguard.local" &&
+        p === "admin123"
+    ) {
+
+        localStorage.setItem(
+            "vg_login",
+            "true"
+        );
 
         document.getElementById(
             "login"
         ).style.display = "none";
 
-    }else{
+    } else {
 
         document.getElementById(
             "loginError"
         ).style.display = "block";
 
     }
+
 }
 
-function logout(){
+
+function logout() {
 
     stopWebcam();
 
-    document.getElementById(
-        "login"
-    ).style.display = "flex";
+    localStorage.removeItem(
+        "vg_login"
+    );
+
+    location.reload();
+
 }
 
-function page(id, btn){
+
+function page(id, btn) {
 
     document
         .querySelectorAll(".page")
-        .forEach(x =>
-            x.classList.remove("active")
+        .forEach(
+            x =>
+                x.classList.remove(
+                    "active"
+                )
         );
 
-    const target =
-        document.getElementById(id);
-
-    if(target){
-        target.classList.add("active");
-    }
+    document
+        .getElementById(id)
+        .classList.add("active");
 
     document
         .querySelectorAll(".nav button")
-        .forEach(x =>
-            x.classList.remove("active")
+        .forEach(
+            x =>
+                x.classList.remove(
+                    "active"
+                )
         );
 
-    if(btn){
-        btn.classList.add("active");
-    }
+    btn.classList.add("active");
 
-    const names = {
-        dashboard:"VisionGuard Dashboard",
-        detection:"AI Detection",
-        cameras:"Camera Management",
-        incidents:"Security Incidents",
-        analytics:"Security Analytics",
-        reports:"Security Reports",
-        security:"Security Monitoring",
-        settings:"System Settings"
+    let names = {
+
+        dashboard:
+            "VisionGuard Dashboard",
+
+        detection:
+            "AI Detection",
+
+        cameras:
+            "Camera Management",
+
+        incidents:
+            "Security Incidents",
+
+        analytics:
+            "Security Analytics",
+
+        reports:
+            "Security Reports",
+
+        security:
+            "Security Monitoring",
+
+        settings:
+            "System Settings"
+
     };
 
     document.getElementById(
         "title"
     ).textContent = names[id];
 
-    if(id === "incidents"){
+    if (id === "incidents") {
         loadIncidents();
     }
+
 }
 
-async function startWebcam(){
 
-    if(webcamStream){
+async function startWebcam() {
+
+    if (webcamStream) {
         return;
     }
 
-    const video =
-        document.getElementById("webcam");
+    const video = document.getElementById("webcam");
+    const preview = document.getElementById("webcamPreview");
+    const status = document.getElementById("webcamStatus");
+    const previewStatus = document.getElementById("previewStatus");
+    const cameraStatus = document.getElementById("camera");
+    const camStatus = document.getElementById("camStatus");
 
-    const preview =
-        document.getElementById(
-            "webcamPreview"
+    try {
+
+        if (
+            !navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia
+        ) {
+            throw new Error(
+                "Webcam access is not supported by this browser or page."
+            );
+        }
+
+        status.textContent =
+            "Requesting camera permission...";
+
+        // Request the browser webcam.
+        // Keep the constraints simple so device-specific settings
+        // do not prevent the camera from opening.
+        const stream =
+            await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: false
+            });
+
+        // Store the stream only after getUserMedia succeeds.
+        webcamStream = stream;
+
+        // Hidden video used for frame capture.
+        if (video) {
+            video.srcObject = stream;
+            video.muted = true;
+            video.playsInline = true;
+
+            video.play().catch(function (error) {
+                console.warn("Hidden video play warning:", error);
+            });
+        }
+
+        // Visible browser webcam preview.
+        // A preview playback failure must NOT be treated as
+        // a camera-permission failure.
+        if (preview) {
+            preview.srcObject = stream;
+            preview.muted = true;
+            preview.autoplay = true;
+            preview.playsInline = true;
+
+            preview.onloadedmetadata = function () {
+                preview.play().catch(function (error) {
+                    console.warn("Preview play warning:", error);
+                });
+            };
+
+            preview.play().catch(function (error) {
+                console.warn("Preview play warning:", error);
+            });
+        }
+
+        // Update camera status.
+        if (previewStatus) {
+            previewStatus.textContent = "● ON";
+            previewStatus.style.color = "#34d399";
+        }
+
+        if (cameraStatus) {
+            cameraStatus.textContent = "ONLINE";
+            cameraStatus.className = "ok";
+        }
+
+        if (camStatus) {
+            camStatus.textContent = "ONLINE";
+            camStatus.className = "ok";
+        }
+
+        status.textContent = "● Webcam active";
+        status.className = "small ok";
+
+        // If the browser/device stops the camera, update the UI.
+        stream.getVideoTracks().forEach(function (track) {
+            track.addEventListener("ended", function () {
+                console.warn("Webcam track ended.");
+                stopWebcam();
+            });
+        });
+
+        // Send frames to the Flask backend for AI processing.
+        webcamTimer = setInterval(
+            captureAndSendFrame,
+            300
         );
+
+        // Send the first frame immediately instead of waiting 300 ms.
+        captureAndSendFrame();
+
+    } catch (error) {
+
+        console.error(
+            "WEBCAM ERROR:",
+            error.name,
+            error.message,
+            error
+        );
+
+        // Stop any partially opened stream.
+        if (webcamStream) {
+            webcamStream.getTracks().forEach(function (track) {
+                track.stop();
+            });
+        }
+
+        webcamStream = null;
+
+        if (status) {
+            status.textContent =
+                "Camera error: " +
+                (error.name || "Unknown error");
+
+            status.className =
+                "small critical";
+        }
+
+        if (previewStatus) {
+            previewStatus.textContent = "ERROR";
+            previewStatus.style.color = "#ff4d4d";
+        }
+
+        if (cameraStatus) {
+            cameraStatus.textContent = "ERROR";
+            cameraStatus.className = "critical";
+        }
+
+        if (camStatus) {
+            camStatus.textContent = "ERROR";
+            camStatus.className = "critical";
+        }
+
+        alert(
+            "VisionGuard camera error:\n\n" +
+            (error.name || "Unknown error") +
+            "\n" +
+            (error.message || "Unable to access the webcam.")
+        );
+    }
+}
+
+function stopWebcam() {
+
+    if (webcamTimer) {
+
+        clearInterval(
+            webcamTimer
+        );
+
+        webcamTimer = null;
+
+    }
+
+    if (webcamStream) {
+
+        webcamStream
+            .getTracks()
+            .forEach(
+                track =>
+                    track.stop()
+            );
+
+        webcamStream = null;
+
+    }
+
+    const video =
+        document.getElementById(
+            "webcam"
+        );
+
+    if (video) {
+        video.srcObject = null;
+    }
+
+    const preview = document.getElementById("webcamPreview");
+    if (preview) preview.srcObject = null;
+
+    const previewStatus = document.getElementById("previewStatus");
+    if (previewStatus) {
+        previewStatus.textContent = "OFF";
+        previewStatus.style.color = "";
+    }
+
+    const aiFeedStatus = document.getElementById("aiFeedStatus");
+    if (aiFeedStatus) {
+        aiFeedStatus.textContent = "WAITING";
+        aiFeedStatus.style.color = "";
+    }
 
     const status =
         document.getElementById(
             "webcamStatus"
         );
 
-    try{
-
-        if(
-            !navigator.mediaDevices ||
-            !navigator.mediaDevices.getUserMedia
-        ){
-            throw new Error(
-                "Browser camera access is unavailable."
-            );
-        }
+    if (status) {
 
         status.textContent =
-            "Requesting camera...";
-
-        webcamStream =
-            await navigator.mediaDevices.getUserMedia({
-                video:{
-                    width:{
-                        ideal:640
-                    },
-                    height:{
-                        ideal:360
-                    },
-                    frameRate:{
-                        ideal:10,
-                        max:15
-                    }
-                },
-                audio:false
-            });
-
-        video.srcObject =
-            webcamStream;
-
-        preview.srcObject =
-            webcamStream;
-
-        await video.play();
-        await preview.play();
-
-        document.getElementById(
-            "previewStatus"
-        ).textContent = "● ON";
-
-        document.getElementById(
-            "previewStatus"
-        ).style.color = "#34d399";
-
-        document.getElementById(
-            "camera"
-        ).textContent = "ONLINE";
-
-        document.getElementById(
-            "camera"
-        ).className = "ok";
-
-        status.textContent =
-            "● Webcam active";
+            "Camera stopped";
 
         status.className =
-            "small ok";
+            "small";
 
-        document.getElementById(
-            "aiFeedStatus"
-        ).textContent = "PROCESSING";
-
-        startFrameLoop();
-
-    }catch(error){
-
-        console.error(
-            "Camera error:",
-            error
-        );
-
-        status.textContent =
-            "Camera error: " + error.message;
-
-        status.className =
-            "small critical";
     }
+
 }
 
-function stopWebcam(){
 
-    if(frameTimer){
-        clearTimeout(frameTimer);
-        frameTimer = null;
-    }
+async function captureAndSendFrame() {
 
-    if(webcamStream){
-
-        webcamStream
-            .getTracks()
-            .forEach(track =>
-                track.stop()
-            );
-
-        webcamStream = null;
-    }
-
-    document.getElementById(
-        "webcam"
-    ).srcObject = null;
-
-    document.getElementById(
-        "webcamPreview"
-    ).srcObject = null;
-
-    document.getElementById(
-        "webcamStatus"
-    ).textContent =
-        "Camera stopped";
-
-    document.getElementById(
-        "previewStatus"
-    ).textContent =
-        "OFF";
-
-    document.getElementById(
-        "camera"
-    ).textContent =
-        "WAITING";
-
-    document.getElementById(
-        "camera"
-    ).className =
-        "warn";
-
-    document.getElementById(
-        "aiFeedStatus"
-    ).textContent =
-        "WAITING";
-}
-
-function startFrameLoop(){
-
-    if(!webcamStream){
-        return;
-    }
-
-    sendFrame();
-}
-
-async function sendFrame(){
-
-    if(
-        !webcamStream ||
-        sendingFrame
-    ){
-
-        if(webcamStream){
-            frameTimer =
-                setTimeout(
-                    sendFrame,
-                    400
-                );
-        }
-
+    if (
+        sendingFrame ||
+        !webcamStream
+    ) {
         return;
     }
 
@@ -1260,31 +2034,26 @@ async function sendFrame(){
             "captureCanvas"
         );
 
-    if(
+    if (
         !video.videoWidth ||
         !video.videoHeight
-    ){
-
-        frameTimer =
-            setTimeout(
-                sendFrame,
-                400
-            );
-
+    ) {
         return;
     }
 
     sendingFrame = true;
 
-    try{
+    try {
 
-        const width = 480;
+        const width = 640;
 
         const height =
             Math.round(
                 video.videoHeight *
-                width /
-                video.videoWidth
+                (
+                    width /
+                    video.videoWidth
+                )
             );
 
         canvas.width =
@@ -1295,10 +2064,7 @@ async function sendFrame(){
 
         const ctx =
             canvas.getContext(
-                "2d",
-                {
-                    alpha:false
-                }
+                "2d"
             );
 
         ctx.drawImage(
@@ -1312,366 +2078,972 @@ async function sendFrame(){
         const image =
             canvas.toDataURL(
                 "image/jpeg",
-                0.5
+                0.65
             );
 
         const response =
             await fetch(
-                API_BASE + "/api/frame",
+                "/api/frame",
                 {
-                    method:"POST",
-                    headers:{
+                    method: "POST",
+
+                    headers: {
                         "Content-Type":
                             "application/json"
                     },
-                    body:JSON.stringify({
-                        image:image
+
+                    body: JSON.stringify({
+                        image: image
                     })
                 }
             );
 
-        if(!response.ok){
+        if (!response.ok) {
+            const errorText = await response.text();
             throw new Error(
-                "Server returned " +
-                response.status
+                "Frame upload failed: " +
+                response.status + " " + errorText
             );
         }
 
-        const data =
-            await response.json();
+        const data = await response.json();
 
-        if(data.state){
-            updateState(
-                data.state
+        if (!data.success) {
+            throw new Error(
+                data.error || "AI processing failed"
             );
         }
 
-        document.getElementById(
-            "aiFeedStatus"
-        ).textContent =
-            "LIVE";
+        if (data.processedFrame) {
+            const processedSrc =
+                "data:image/jpeg;base64," +
+                data.processedFrame;
 
-    }catch(error){
+            document
+                .querySelectorAll(
+                    "#aiFeed, #aiFeed2, #cameraFeed"
+                )
+                .forEach(function (img) {
+                    img.src = processedSrc;
+                });
+        }
+
+        const aiFeedStatus = document.getElementById("aiFeedStatus");
+        if (aiFeedStatus) {
+            aiFeedStatus.textContent = "● RECEIVING FRAMES";
+            aiFeedStatus.style.color = "#34d399";
+        }
+
+    } catch (error) {
 
         console.error(
             "Frame error:",
             error
         );
 
-        document.getElementById(
-            "aiFeedStatus"
-        ).textContent =
-            "ERROR";
-
-    }finally{
+    } finally {
 
         sendingFrame = false;
 
-        if(webcamStream){
-
-            frameTimer =
-                setTimeout(
-                    sendFrame,
-                    400
-                );
-        }
     }
+
 }
 
-function updateState(d){
 
-    const people =
-        Number(d.people || 0);
+function riskClass(
+    el,
+    level
+) {
 
-    const objects =
-        Number(d.objects || 0);
-
-    const risk =
-        Number(d.risk || 5);
-
-    const fps =
-        Number(d.fps || 0);
-
-    const inference =
-        Number(d.inferenceTime || 0);
-
-    const entered =
-        Number(d.entered || 0);
-
-    const exited =
-        Number(d.exited || 0);
-
-    const level =
-        d.riskLevel || "LOW";
-
-    setText("people",people);
-    setText("objects",objects);
-    setText("risk",risk);
-    setText("fps",fps.toFixed(1));
-
-    setText("dPeople",people);
-    setText("dObjects",objects);
-    setText("dEntered",entered);
-    setText("dExited",exited);
-
-    setText("anPeople",people);
-    setText("anObjects",objects);
-    setText("anFPS",fps.toFixed(1));
-    setText("anRisk",risk);
-
-    setText(
-        "inference",
-        inference.toFixed(0) + " ms"
-    );
-
-    const riskEl =
-        document.getElementById(
-            "riskLevel"
+    el.className =
+        "small " +
+        (
+            level === "CRITICAL"
+                ? "critical"
+                :
+            level === "HIGH"
+                ? "high"
+                :
+            level === "MEDIUM"
+                ? "warn"
+                :
+                "ok"
         );
 
-    if(riskEl){
-
-        riskEl.textContent =
-            level;
-
-        riskEl.className =
-            "small " +
-            riskClass(level);
-    }
-
-    if(d.yolo){
-
-        setText(
-            "yolo",
-            "READY"
-        );
-
-        document.getElementById(
-            "yolo"
-        ).className =
-            "ok";
-
-        setText(
-            "secYolo",
-            "READY"
-        );
-    }
-
-    if(d.camera){
-
-        setText(
-            "camera",
-            "ONLINE"
-        );
-
-        document.getElementById(
-            "camera"
-        ).className =
-            "ok";
-
-        setText(
-            "secCamera",
-            "ONLINE"
-        );
-
-        document.getElementById(
-            "secCamera"
-        ).className =
-            "ok";
-    }
 }
 
-function riskClass(level){
 
-    if(level === "CRITICAL"){
-        return "critical";
-    }
+async function update() {
 
-    if(level === "HIGH"){
-        return "high";
-    }
+    try {
 
-    if(level === "MEDIUM"){
-        return "warn";
-    }
-
-    return "ok";
-}
-
-function setText(id,value){
-
-    const el =
-        document.getElementById(id);
-
-    if(el){
-        el.textContent =
-            value;
-    }
-}
-
-async function updateStatus(){
-
-    try{
-
-        const response =
+        let r =
             await fetch(
-                API_BASE + "/api/status",
+                "/api/status",
                 {
-                    cache:"no-store"
+                    cache:
+                        "no-store"
                 }
             );
 
-        if(!response.ok){
-            return;
+        let d =
+            await r.json();
+
+        let people =
+            d.people ?? 0;
+
+        let objects =
+            d.objects ?? 0;
+
+        let risk =
+            d.risk ?? 0;
+
+        let level =
+            d.riskLevel ??
+            "LOW";
+
+        let fps =
+            Number(
+                d.fps ?? 0
+            );
+
+        let entered =
+            d.entered ?? 0;
+
+        let exited =
+            d.exited ?? 0;
+
+        let inf =
+            Number(
+                d.inferenceTime ?? 0
+            );
+
+
+        [
+            "people",
+            "dPeople",
+            "aPeople",
+            "anPeople",
+            "rPeople",
+            "sPeople"
+        ].forEach(id => {
+
+            let el =
+                document.getElementById(
+                    id
+                );
+
+            if (el) {
+                el.textContent =
+                    people;
+            }
+
+        });
+
+
+        [
+            "objects",
+            "dObjects",
+            "aObjects",
+            "anObjects",
+            "rObjects",
+            "sObjects"
+        ].forEach(id => {
+
+            let el =
+                document.getElementById(
+                    id
+                );
+
+            if (el) {
+                el.textContent =
+                    objects;
+            }
+
+        });
+
+
+        [
+            "fps",
+            "aFPS",
+            "anFPS"
+        ].forEach(id => {
+
+            let el =
+                document.getElementById(
+                    id
+                );
+
+            if (el) {
+
+                el.textContent =
+                    fps.toFixed(1);
+
+            }
+
+        });
+
+
+        [
+            "risk",
+            "aRisk"
+        ].forEach(id => {
+
+            let el =
+                document.getElementById(
+                    id
+                );
+
+            if (el) {
+                el.textContent =
+                    risk;
+            }
+
+        });
+
+
+        let riskElement =
+            document.getElementById(
+                "riskLevel"
+            );
+
+        if (riskElement) {
+
+            riskElement.textContent =
+                level;
+
+            riskClass(
+                riskElement,
+                level
+            );
+
         }
 
-        const data =
-            await response.json();
 
-        updateState(data);
+        [
+            "dEntered",
+            "anEntered",
+            "rEntered",
+            "sEntered"
+        ].forEach(id => {
 
-    }catch(error){
+            let el =
+                document.getElementById(
+                    id
+                );
 
-        document.getElementById(
-            "system"
-        ).textContent =
-            "● SERVICE ERROR";
+            if (el) {
+                el.textContent =
+                    entered;
+            }
 
-        document.getElementById(
-            "system"
-        ).className =
-            "system warning";
+        });
+
+
+        [
+            "dExited",
+            "anExited",
+            "rExited",
+            "sExited"
+        ].forEach(id => {
+
+            let el =
+                document.getElementById(
+                    id
+                );
+
+            if (el) {
+                el.textContent =
+                    exited;
+            }
+
+        });
+
+
+        [
+            "inference",
+            "aInference",
+            "anInference"
+        ].forEach(id => {
+
+            let el =
+                document.getElementById(
+                    id
+                );
+
+            if (el) {
+
+                el.textContent =
+                    inf.toFixed(1) +
+                    " ms";
+
+            }
+
+        });
+
+
+        [
+            "anRisk",
+            "rRisk",
+            "sRisk"
+        ].forEach(id => {
+
+            let el =
+                document.getElementById(
+                    id
+                );
+
+            if (el) {
+                el.textContent =
+                    level;
+            }
+
+        });
+
+
+        let yolo =
+            document.getElementById(
+                "yolo"
+            );
+
+        if (yolo) {
+
+            yolo.textContent =
+                d.yolo
+                    ? "READY"
+                    : "ERROR";
+
+            yolo.className =
+                d.yolo
+                    ? "ok"
+                    : "critical";
+
+        }
+
+
+        let camera =
+            document.getElementById(
+                "camera"
+            );
+
+        if (camera) {
+
+            camera.textContent =
+                d.camera
+                    ? "ONLINE"
+                    : "WAITING";
+
+            camera.className =
+                d.camera
+                    ? "ok"
+                    : "warn";
+
+        }
+
+
+        let camStatus =
+            document.getElementById(
+                "camStatus"
+            );
+
+        if (camStatus) {
+
+            camStatus.textContent =
+                d.camera
+                    ? "ONLINE"
+                    : "WAITING";
+
+            camStatus.className =
+                d.camera
+                    ? "ok"
+                    : "warn";
+
+        }
+
+
+        history.push(
+            people + objects
+        );
+
+        if (history.length > 30) {
+            history.shift();
+        }
+
+        drawChart();
+
+
+        if (
+            lastRisk !== level &&
+            (
+                level === "HIGH" ||
+                level === "CRITICAL"
+            ) &&
+            document
+                .getElementById(
+                    "alertToggle"
+                )
+                ?.classList
+                .contains("on")
+        ) {
+
+            notify(level);
+
+        }
+
+        lastRisk = level;
+
+
+        let system =
+            document.getElementById(
+                "system"
+            );
+
+        if (system) {
+
+            system.textContent =
+                d.camera
+                    ? "● SYSTEM ONLINE"
+                    : "● WAITING FOR CAMERA";
+
+            system.className =
+                d.camera
+                    ? "system"
+                    : "system warning";
+
+        }
+
+    } catch (e) {
+
+        let system =
+            document.getElementById(
+                "system"
+            );
+
+        if (system) {
+
+            system.textContent =
+                "● SYSTEM WARNING";
+
+            system.className =
+                "system warning";
+
+        }
+
     }
+
 }
 
-function incidentHTML(item){
 
-    const severity =
-        String(
-            item.severity ||
-            "LOW"
+async function loadIncidents() {
+
+    try {
+
+        let r =
+            await fetch(
+                "/api/incidents",
+                {
+                    cache:
+                        "no-store"
+                }
+            );
+
+        let d =
+            await r.json();
+
+        incidents =
+            d.incidents || [];
+
+        [
+            "anIncidents",
+            "rIncidents",
+            "sIncidents"
+        ].forEach(id => {
+
+            let el =
+                document.getElementById(
+                    id
+                );
+
+            if (el) {
+
+                el.textContent =
+                    incidents.length;
+
+            }
+
+        });
+
+        renderIncidents();
+
+        renderRecent();
+
+    } catch (e) {
+
+    }
+
+}
+
+
+function renderIncidents() {
+
+    let q =
+        (
+            document.getElementById(
+                "incidentSearch"
+            )?.value || ""
         ).toLowerCase();
 
-    return `
-        <div class="incident">
-            <div class="incident-top">
-                <strong>
-                    ${escapeHTML(item.type || "Incident")}
-                </strong>
+    let f =
+        document.getElementById(
+            "severityFilter"
+        )?.value || "";
 
-                <span class="badge b-${severity}">
-                    ${escapeHTML(severity.toUpperCase())}
-                </span>
+
+    let a =
+        incidents.filter(x =>
+
+            (!f ||
+                x.severity === f) &&
+
+            JSON.stringify(x)
+                .toLowerCase()
+                .includes(q)
+
+        );
+
+
+    let box =
+        document.getElementById(
+            "incidentList"
+        );
+
+    if (!box) {
+        return;
+    }
+
+
+    if (!a.length) {
+
+        box.innerHTML =
+            '<div class="empty">No incidents found.</div>';
+
+        return;
+
+    }
+
+
+    box.innerHTML =
+        a.map(x => {
+
+            let s =
+                (
+                    x.severity ||
+                    "LOW"
+                ).toLowerCase();
+
+            return `
+
+            <div class="incident">
+
+                <div class="incident-top">
+
+                    <b>
+                        ${safe(
+                            x.type ||
+                            "Security Event"
+                        )}
+                    </b>
+
+                    <span class="badge b-${s}">
+                        ${safe(
+                            x.severity ||
+                            "LOW"
+                        )}
+                    </span>
+
+                </div>
+
+                <p>
+                    ${safe(
+                        x.reason ||
+                        "Security event detected"
+                    )}
+                </p>
+
+                <p>
+                    Tracking ID:
+                    ${safe(
+                        x.trackingId ??
+                        "-"
+                    )}
+
+                    &nbsp;
+
+                    Confidence:
+                    ${safe(
+                        x.confidence ??
+                        "-"
+                    )}%
+                </p>
+
+                <p>
+                    Camera:
+                    ${safe(
+                        x.camera ||
+                        "Browser Webcam"
+                    )}
+
+                    &nbsp;
+
+                    Time:
+                    ${safe(
+                        x.timestamp ||
+                        "-"
+                    )}
+                </p>
+
             </div>
 
-            <p>
-                Confidence:
-                ${Number(item.confidence || 0).toFixed(1)}%
-            </p>
+            `;
 
-            <p>
-                ${escapeHTML(item.reason || "")}
-            </p>
+        }).join("");
 
-            <p>
-                ${escapeHTML(item.timestamp || "")}
-            </p>
-        </div>
-    `;
 }
 
-function escapeHTML(value){
 
-    return String(value)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-}
+function renderRecent() {
 
-async function loadIncidents(){
-
-    try{
-
-        const response =
-            await fetch(
-                API_BASE + "/api/incidents",
-                {
-                    cache:"no-store"
-                }
-            );
-
-        if(!response.ok){
-            return;
-        }
-
-        const data =
-            await response.json();
-
-        const items =
-            data.incidents || [];
-
-        const html =
-            items.length
-            ? items
-                .slice(0,20)
-                .map(incidentHTML)
-                .join("")
-            : '<div class="empty">No incidents yet.</div>';
-
-        const recent =
-            document.getElementById(
-                "recentIncidents"
-            );
-
-        const all =
-            document.getElementById(
-                "allIncidents"
-            );
-
-        if(recent){
-            recent.innerHTML =
-                html;
-        }
-
-        if(all){
-            all.innerHTML =
-                html;
-        }
-
-        const report =
-            document.getElementById(
-                "reportOutput"
-            );
-
-        if(report){
-            report.textContent =
-                "Total incidents: " +
-                items.length;
-        }
-
-    }catch(error){
-
-        console.error(
-            "Incident error:",
-            error
+    let box =
+        document.getElementById(
+            "recent"
         );
+
+    if (!box) {
+        return;
     }
+
+
+    let a =
+        incidents.slice(
+            0,
+            4
+        );
+
+
+    box.innerHTML =
+        a.length
+
+            ?
+
+            a.map(x => `
+
+            <div class="incident">
+
+                <div class="incident-top">
+
+                    <b>
+                        ${safe(
+                            x.type ||
+                            "Security Event"
+                        )}
+                    </b>
+
+                    <span>
+                        ${safe(
+                            x.severity ||
+                            "LOW"
+                        )}
+                    </span>
+
+                </div>
+
+                <p>
+                    ${safe(
+                        x.timestamp ||
+                        ""
+                    )}
+                </p>
+
+            </div>
+
+            `).join("")
+
+            :
+
+            '<div class="empty">No incidents yet.</div>';
+
 }
+
+
+function safe(v) {
+
+    return String(v)
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+
+}
+
+
+function drawChart() {
+
+    let c =
+        document.getElementById(
+            "chart"
+        );
+
+    if (!c) {
+        return;
+    }
+
+
+    let m =
+        Math.max(
+            ...history,
+            1
+        );
+
+
+    c.innerHTML =
+        history.map(v => `
+
+        <div
+            class="bar"
+            style="height:${Math.max(
+                5,
+                v / m * 100
+            )}%"
+        >
+            <span>${v}</span>
+        </div>
+
+        `).join("");
+
+}
+
+
+function notify(level) {
+
+    if (!("Notification" in window)) {
+        return;
+    }
+
+
+    if (
+        Notification.permission ===
+        "default"
+    ) {
+
+        Notification.requestPermission();
+
+    }
+
+
+    if (
+        Notification.permission ===
+        "granted"
+    ) {
+
+        new Notification(
+            "VisionGuard Security Alert",
+            {
+                body:
+                    "Risk level is now " +
+                    level
+            }
+        );
+
+    }
+
+}
+
+
+function exportCSV() {
+
+    let rows = [
+
+        [
+            "ID",
+            "Type",
+            "Severity",
+            "Confidence",
+            "Tracking ID",
+            "Camera",
+            "Timestamp"
+        ]
+
+    ];
+
+
+    incidents.forEach(x => {
+
+        rows.push([
+
+            x.id,
+            x.type,
+            x.severity,
+            x.confidence,
+            x.trackingId,
+            x.camera,
+            x.timestamp
+
+        ]);
+
+    });
+
+
+    let csv =
+        rows
+            .map(r =>
+                r.map(v =>
+                    `"${String(
+                        v ?? ""
+                    ).replaceAll(
+                        '"',
+                        '""'
+                    )}"`
+                ).join(",")
+            )
+            .join("\n");
+
+
+    let a =
+        document.createElement(
+            "a"
+        );
+
+    a.href =
+        URL.createObjectURL(
+            new Blob(
+                [csv],
+                {
+                    type:
+                        "text/csv"
+                }
+            )
+        );
+
+    a.download =
+        "visionguard_incidents.csv";
+
+    a.click();
+
+}
+
+
+function downloadReport() {
+
+    let text =
+
+        "VISIONGUARD SECURITY REPORT\n\n" +
+
+        "Generated: " +
+        new Date().toLocaleString() +
+        "\n\n" +
+
+        "People: " +
+        document.getElementById(
+            "people"
+        ).textContent +
+
+        "\nObjects: " +
+        document.getElementById(
+            "objects"
+        ).textContent +
+
+        "\nRisk: " +
+        document.getElementById(
+            "risk"
+        ).textContent +
+        " - " +
+        document.getElementById(
+            "riskLevel"
+        ).textContent +
+
+        "\nFPS: " +
+        document.getElementById(
+            "fps"
+        ).textContent +
+
+        "\nEntries: " +
+        document.getElementById(
+            "dEntered"
+        ).textContent +
+
+        "\nExits: " +
+        document.getElementById(
+            "dExited"
+        ).textContent +
+
+        "\nIncidents: " +
+        incidents.length +
+
+        "\n\nINCIDENTS\n" +
+
+        incidents
+            .map(x =>
+                `${x.timestamp || ""} | ` +
+                `${x.severity || ""} | ` +
+                `${x.type || ""} | ` +
+                `ID ${x.trackingId ?? "-"}`
+            )
+            .join("\n");
+
+
+    let a =
+        document.createElement(
+            "a"
+        );
+
+    a.href =
+        URL.createObjectURL(
+            new Blob(
+                [text],
+                {
+                    type:
+                        "text/plain"
+                }
+            )
+        );
+
+    a.download =
+        "visionguard_security_report.txt";
+
+    a.click();
+
+}
+
+
+loadIncidents();
+
+update();
 
 setInterval(
-    updateStatus,
-    3000
+    update,
+    1000
 );
 
 setInterval(
     loadIncidents,
     5000
 );
-
-updateStatus();
-loadIncidents();
 
 </script>
 
